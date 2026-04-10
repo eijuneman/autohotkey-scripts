@@ -1,0 +1,1 @@
+﻿Run explore C:\Users\userpc\Documents\재현카달록.png

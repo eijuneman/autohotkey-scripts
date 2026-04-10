@@ -1,0 +1,1 @@
+ComObjCreate("SAPI.SpVoice").Speak("äÅπ°°¢1*12  19*290*3600")

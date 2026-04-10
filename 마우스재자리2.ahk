@@ -1,0 +1,1 @@
+﻿run, C:\Users\shwoodnew\Desktop\오토핫키2\마우스재자리.ahk

@@ -1,0 +1,3 @@
+Calc;calc.exe
+Notepad;notepad.exe
+ProgramFiles;C:\Program Files

@@ -1,0 +1,171 @@
+﻿<?xml version="1.0"?>
+<cexml>
+	<files>
+		<main file="\\192.168.0.1\hdd2\일정표 최근\일정표220730 - 복사본\일정표14_2.ahk" id="1">
+			<file dir="\\192.168.0.1\hdd2\일정표 최근\일정표220730 - 복사본" ext="ahk" file="\\192.168.0.1\hdd2\일정표 최근\일정표220730 - 복사본\일정표14_2.ahk" filename="일정표14_2.ahk" id="2" lang="ahk" lower="\\192.168.0.1\hdd2\일정표 최근\일정표220730 - 복사본\일정표14_2.ahk" nne="일정표14_2" type="File" time="20230613140430" encoding="UTF-8">
+				<info class="LV_Colors" text="CLV1" type="Instance" upper="CLV1"></info>
+				<info class="LV_Colors" text="CLV2" type="Instance" upper="CLV2"></info>
+				<info class="LV_Colors" text="CLV3" type="Instance" upper="CLV3"></info>
+				<info class="LV_Colors" text="CLV11" type="Instance" upper="CLV11"></info>
+				<info class="LV_Colors" text="CLV22" type="Instance" upper="CLV22"></info>
+				<info class="LV_Colors" text="CLV33" type="Instance" upper="CLV33"></info>
+				<info class="LV_Colors" text="CLV91" type="Instance" upper="CLV91"></info>
+				<info class="LV_Colors" text="CLV92" type="Instance" upper="CLV92"></info>
+				<info class="LV_Colors" text="CLV93" type="Instance" upper="CLV93"></info>
+				<info class="LV_Colors" text="CLV7" type="Instance" upper="CLV7"></info>
+				<info class="LV_Colors" text="CLV7" type="Instance" upper="CLV7"></info>
+				<info class="LV_InCellEdit" text="ICELV2" type="Instance" upper="ICELV2"></info>
+				<info text="refresh" type="Label" upper="REFRESH"></info>
+				<info text="month_1" type="Label" upper="MONTH_1"></info>
+				<info text="month_2" type="Label" upper="MONTH_2"></info>
+				<info text="btt3" type="Label" upper="BTT3"></info>
+				<info text="LV31" type="Label" upper="LV31"></info>
+				<info text="상품선택" type="Label" upper="상품선택"></info>
+				<info text="삭제1" type="Label" upper="삭제1"></info>
+				<info text="refreshtab1" type="Label" upper="REFRESHTAB1"></info>
+				<info text="button1" type="Label" upper="BUTTON1"></info>
+				<info text="button2" type="Label" upper="BUTTON2"></info>
+				<info text="button3" type="Label" upper="BUTTON3"></info>
+				<info text="button4" type="Label" upper="BUTTON4"></info>
+				<info text="refresh1" type="Label" upper="REFRESH1"></info>
+				<info text="refresh9" type="Label" upper="REFRESH9"></info>
+				<info text="refreshedsm" type="Label" upper="REFRESHEDSM"></info>
+				<info text="lvCO" type="Label" upper="LVCO"></info>
+				<info text="lvedsm" type="Label" upper="LVEDSM"></info>
+				<info text="refresh3" type="Label" upper="REFRESH3"></info>
+				<info text="중분류3" type="Label" upper="중분류3"></info>
+				<info text="소분류3" type="Label" upper="소분류3"></info>
+				<info text="단가군3" type="Label" upper="단가군3"></info>
+				<info text="추가4_1" type="Label" upper="추가4_1"></info>
+				<info text="추가4_2" type="Label" upper="추가4_2"></info>
+				<info text="추가4_3" type="Label" upper="추가4_3"></info>
+				<info text="추가4_제거" type="Label" upper="추가4_제거"></info>
+				<info text="4monthcal" type="Label" upper="4MONTHCAL"></info>
+				<info text="refresh4" type="Label" upper="REFRESH4"></info>
+				<info text="month_41" type="Label" upper="MONTH_41"></info>
+				<info text="month_42" type="Label" upper="MONTH_42"></info>
+				<info text="month_43" type="Label" upper="MONTH_43"></info>
+				<info text="month_44" type="Label" upper="MONTH_44"></info>
+				<info text="month_45" type="Label" upper="MONTH_45"></info>
+				<info text="month_46" type="Label" upper="MONTH_46"></info>
+				<info text="month_52" type="Label" upper="MONTH_52"></info>
+				<info text="month_51" type="Label" upper="MONTH_51"></info>
+				<info text="month_53" type="Label" upper="MONTH_53"></info>
+				<info text="month_54" type="Label" upper="MONTH_54"></info>
+				<info text="month_55" type="Label" upper="MONTH_55"></info>
+				<info text="month_56" type="Label" upper="MONTH_56"></info>
+				<info text="lv51" type="Label" upper="LV51"></info>
+				<info text="LV52" type="Label" upper="LV52"></info>
+				<info text="LV53" type="Label" upper="LV53"></info>
+				<info text="month3_5" type="Label" upper="MONTH3_5"></info>
+				<info text="month4_5" type="Label" upper="MONTH4_5"></info>
+				<info text="5monthcal" type="Label" upper="5MONTHCAL"></info>
+				<info text="refresh5" type="Label" upper="REFRESH5"></info>
+				<info text="일정추가" type="Label" upper="일정추가"></info>
+				<info text="발주서추가" type="Label" upper="발주서추가"></info>
+				<info text="입고장추가" type="Label" upper="입고장추가"></info>
+				<info text="reload" type="Label" upper="RELOAD"></info>
+				<info text="GuiClose" type="Label" upper="GUICLOSE"></info>
+				<info text="change" type="Label" upper="CHANGE"></info>
+				<info text="lv1" type="Label" upper="LV1"></info>
+				<info text="1st변환" type="Label" upper="1ST변환"></info>
+				<info text="lv2" type="Label" upper="LV2"></info>
+				<info text="lv3" type="Label" upper="LV3"></info>
+				<info text="lv11" type="Label" upper="LV11"></info>
+				<info text="lv22" type="Label" upper="LV22"></info>
+				<info text="lv33" type="Label" upper="LV33"></info>
+				<info text="LV41" type="Label" upper="LV41"></info>
+				<info text="LV43" type="Label" upper="LV43"></info>
+				<info text="LV42" type="Label" upper="LV42"></info>
+				<info text="READ1" type="Label" upper="READ1"></info>
+				<info text="리프레쉬" type="Label" upper="리프레쉬"></info>
+				<info text="카메라1" type="Label" upper="카메라1"></info>
+				<info text="라인추출1" type="Label" upper="라인추출1"></info>
+				<info text="라인추가1" type="Label" upper="라인추가1"></info>
+				<info text="라인삽입1" type="Label" upper="라인삽입1"></info>
+				<info text="라인삭제1" type="Label" upper="라인삭제1"></info>
+				<info text="라인수정1" type="Label" upper="라인수정1"></info>
+				<info text="라인완료1" type="Label" upper="라인완료1"></info>
+				<info text="지우기1" type="Label" upper="지우기1"></info>
+				<info text="LV7" type="Label" upper="LV7"></info>
+				<info text="리스트로저장" type="Label" upper="리스트로저장"></info>
+				<info text="준비중으로저장" type="Label" upper="준비중으로저장"></info>
+				<info text="준비완료로저장" type="Label" upper="준비완료로저장"></info>
+				<info text="완료출하로저장" type="Label" upper="완료출하로저장"></info>
+				<info text="문자보내기" type="Label" upper="문자보내기"></info>
+				<info text="리스트만따로문자보내기" type="Label" upper="리스트만따로문자보내기"></info>
+				<info text="변환" type="Label" upper="변환"></info>
+				<info text="저장1" type="Label" upper="저장1"></info>
+				<info text="저장하기" type="Label" upper="저장하기"></info>
+				<info text="makefile" type="Label" upper="MAKEFILE"></info>
+				<info text="상태close" type="Label" upper="상태CLOSE"></info>
+				<info text="상태close11" type="Label" upper="상태CLOSE11"></info>
+				<info text="9add_1" type="Label" upper="9ADD_1"></info>
+				<info text="9add_2" type="Label" upper="9ADD_2"></info>
+				<info text="READ9" type="Label" upper="READ9"></info>
+				<info text="read9_1" type="Label" upper="READ9_1"></info>
+				<info text="삭제9" type="Label" upper="삭제9"></info>
+				<info text="입하리스트업저장" type="Label" upper="입하리스트업저장"></info>
+				<info text="입하입고진행중저장" type="Label" upper="입하입고진행중저장"></info>
+				<info text="입고완료저장" type="Label" upper="입고완료저장"></info>
+				<info text="문자보내기9" type="Label" upper="문자보내기9"></info>
+				<info text="리스트만따로문자보내기9" type="Label" upper="리스트만따로문자보내기9"></info>
+				<info text="변환9" type="Label" upper="변환9"></info>
+				<info text="tt4" type="Label" upper="TT4"></info>
+				<info text="keyboard" type="Label" upper="KEYBOARD"></info>
+				<info text="btnadd" type="Label" upper="BTNADD"></info>
+				<info text="btndel" type="Label" upper="BTNDEL"></info>
+				<info text="btnesc" type="Label" upper="BTNESC"></info>
+				<info text="btn1" type="Label" upper="BTN1"></info>
+				<info text="btn2" type="Label" upper="BTN2"></info>
+				<info text="btn3" type="Label" upper="BTN3"></info>
+				<info text="btn4" type="Label" upper="BTN4"></info>
+				<info text="btn5" type="Label" upper="BTN5"></info>
+				<info text="btn6" type="Label" upper="BTN6"></info>
+				<info text="btn7" type="Label" upper="BTN7"></info>
+				<info text="btn8" type="Label" upper="BTN8"></info>
+				<info text="btn9" type="Label" upper="BTN9"></info>
+				<info text="btn0" type="Label" upper="BTN0"></info>
+				<info text="lv91" type="Label" upper="LV91"></info>
+				<info text="9edit_1" type="Label" upper="9EDIT_1"></info>
+				<info text="9rd변환" type="Label" upper="9RD변환"></info>
+				<info text="lv92" type="Label" upper="LV92"></info>
+				<info text="9edit_2" type="Label" upper="9EDIT_2"></info>
+				<info text="lv93" type="Label" upper="LV93"></info>
+				<info text="9edit_3" type="Label" upper="9EDIT_3"></info>
+				<info text="상태close2" type="Label" upper="상태CLOSE2"></info>
+				<info text="READ4" type="Label" upper="READ4"></info>
+				<info text="READ4_1" type="Label" upper="READ4_1"></info>
+				<info text="리프레쉬4" type="Label" upper="리프레쉬4"></info>
+				<info text="삭제4" type="Label" upper="삭제4"></info>
+				<info text="라인추출4" type="Label" upper="라인추출4"></info>
+				<info text="라인추가4" type="Label" upper="라인추가4"></info>
+				<info text="라인삽입4" type="Label" upper="라인삽입4"></info>
+				<info text="라인삭제4" type="Label" upper="라인삭제4"></info>
+				<info text="라인수정4" type="Label" upper="라인수정4"></info>
+				<info text="라인완료4" type="Label" upper="라인완료4"></info>
+				<info text="지우기4" type="Label" upper="지우기4"></info>
+				<info text="LV47" type="Label" upper="LV47"></info>
+				<info text="리스트로저장4" type="Label" upper="리스트로저장4"></info>
+				<info text="준비중으로저장4" type="Label" upper="준비중으로저장4"></info>
+				<info text="준비완료로저장4" type="Label" upper="준비완료로저장4"></info>
+				<info text="완료출하로저장4" type="Label" upper="완료출하로저장4"></info>
+				<info text="문자보내기4" type="Label" upper="문자보내기4"></info>
+				<info text="리스트만따로문자보내기4" type="Label" upper="리스트만따로문자보내기4"></info>
+				<info text="변환4" type="Label" upper="변환4"></info>
+				<info text="저장4" type="Label" upper="저장4"></info>
+				<info text="makefile4" type="Label" upper="MAKEFILE4"></info>
+				<info text="상태close4" type="Label" upper="상태CLOSE4"></info>
+				<info text="READedsm" type="Label" upper="READEDSM"></info>
+				<info text="LVedsm1" type="Label" upper="LVEDSM1"></info>
+				<info att="parmDate, parmMode" pos="98087" text="Get_Weekday" type="Function" upper="GET_WEEKDAY"></info>
+				<info att="vDate, vWDayStart:=2, vFormat:=&quot;yyyyMMddHHmmss&quot;" pos="98433" text="DateGetWeekStart" type="Function" upper="DATEGETWEEKSTART"></info>
+				<info att="vDate, vWDayEnd:=1, vFormat:=&quot;yyyyMMddHHmmss&quot;" pos="98780" text="DateGetWeekEnd" type="Function" upper="DATEGETWEEKEND"></info>
+				<info att="DateTime, Time, TimeUnits" pos="99119" text="DateAdd" type="Function" upper="DATEADD"></info>
+				<info att="FILENAME" pos="99212" text="PERCENT" type="Function" upper="PERCENT"></info>
+				<info att="FILENAME" pos="99459" text="PERCENT9" type="Function" upper="PERCENT9"></info></file>
+			<header type="Instance"></header>
+			<header type="Label"></header>
+			<header type="Function"></header></main>
+	</files>
+</cexml>

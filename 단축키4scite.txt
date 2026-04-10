@@ -1,0 +1,42 @@
+Ctrl+Keypad+		텍스트 크기를 확대합니다.
+Ctrl+Keypad-		텍스트 크기를 줄입니다.
+Ctrl+Keypad/		텍스트 크기를 정상으로 복원합니다.
+Ctrl+Tab		최근 파일을 순환합니다.
+Tab			들여쓰기 블록.
+Shift+Tab		디덴트 블록.
+Ctrl+BackSpace		단어를 시작하려면 삭제합니다.
+Ctrl+Delete		삭제부터 끝까지.
+Ctrl+Shift+BackSpace	라인의 시작까지 삭제합니다.
+Ctrl+Shift+Delete	삭제 후 행 끝까지.
+Ctrl+Home		문서 시작으로 이동합니다.
+Ctrl+Shift+Home		선택을 문서 시작으로 확장합니다.
+Alt+Home		표시선의 시작으로 이동합니다.
+Ctrl+End		문서의 끝으로 이동합니다.
+Ctrl+Shift+End		선택을 문서 끝까지 확장합니다.
+Alt+End			표시선 끝으로 이동합니다.
+Ctrl+Keypad*		접힘 지점을 확장하거나 축소합니다.
+Alt+F2			다음 책갈피로 선택합니다.
+Alt+Shift+F2		이전 책갈피로 선택합니다.
+Ctrl+F3			선택을 찾습니다.
+Ctrl+Shift+F3		선택을 거꾸로 찾습니다.
+Ctrl+Up			스크롤 업.
+Ctrl+Down		스크롤 다운.
+Ctrl+L			라인 컷.
+Ctrl+Shift+T		라인 카피.
+Ctrl+Shift+L		라인 삭제.
+Ctrl+T			선이 이전과 바뀝니다.
+Ctrl+D			선택 중복. (SciTE 편집기에서 사용하기 좋습니다.)
+Ctrl+K			중첩된 것을 건너뛰고 일치하는 전처리기 조건을 찾습니다.
+Ctrl+Shift+K		조건부로 일치하는 전처리기를 선택합니다.
+Ctrl+J			중첩된 것은 건너뛰고 조건부로 일치하는 전처리기를 거꾸로 찾습니다.
+Ctrl+Q			코멘트 아웃라인(SciTE 편집기에서 사용하기 좋습니다)
+Ctrl+Shift+J		조건부 역방향으로 전처리기를 일치시키려면 이 항목을 선택합니다.
+Ctrl+[			이전 단락. Shift가 선택을 확장합니다.
+Ctrl+]			다음 단락. 시프트는 선택을 확장합니다.
+Ctrl+Left		이전 단어. Shift가 선택 영역을 확장합니다.
+Ctrl+Right		다음 단어. 시프트는 선택을 확장합니다.
+Ctrl+/			이전 단어 부분. Shift가 선택 영역을 확장합니다
+Ctrl+\			다음 단어 부분. Shift가 선택 영역을 확장합니다.
+Alt+Shift+Movement	직사각형 블록 선택.
+Alt+Shift+Home		직사각형 선택을 줄의 시작 부분까지 확장합니다.
+Alt+Shift+End		직사각형 선택을 줄 끝까지 확장합니다.

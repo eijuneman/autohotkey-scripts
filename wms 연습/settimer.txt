@@ -1,0 +1,6 @@
+FormatTime, OutputVar , YYYYMMDDHHmm, mm
+MsgBox, % OutputVar
+
+if (OutputVar = "10") or (OutputVar = "20") or (OutputVar = "30") or (OutputVar = "40") or (OutputVar = "50") or (OutputVar = "00") 
+	
+return

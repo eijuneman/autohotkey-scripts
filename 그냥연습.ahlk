@@ -1,0 +1,18 @@
+Sleep,100
+WINTITLE=외상리스트
+Gui, 1:Destroy
+Gui, 1:Default
+Gui, 1:+alwaysontop
+Gui, 1:ADD, TEXT, w140 v루틴넘버, %WINTITLE%
+Gui, 1:ADD, button, y+0 w140 gred, 재 시 작
+Gui, 1:Show, x2057 y1165 w150, %WINTITLE%
+return
+
+red:
+{
+	Send, {ctrl Down}c{Ctrl Up}
+	Sleep, 200
+	Send, {ctrl Down}{Left 2}{Ctrl Up}
+
+}
+return

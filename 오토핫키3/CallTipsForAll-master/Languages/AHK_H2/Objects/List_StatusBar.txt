@@ -1,0 +1,23 @@
+0 StatusBarObject StatusBarAddByDerived [\w\.]+\.Add\(\"StatusBar\"
+0 StatusBarObject StatusBarAddSpecByDerived [\w\.]+\.AddStatusBar\(
+0 StatusBarObject StatusBarByComment ;[ \t]*StatusBar
+`GuiControlObject
+`/docs/commands/GuiControls.htm#StatusBar
+
+
+Method
+SetText
+`Success := SB.SetText(NewText [, PartNumber := 1, Style := 0])
+`/docs/commands/GuiControls.htm#SB_[MemberName]
+
+
+Method
+SetParts
+`Hwnd := SB.SetParts([Width1, Width2, ... Width255])
+`/docs/commands/GuiControls.htm#SB_[MemberName]
+
+
+Method
+SetIcon
+`HICON := SB.SetIcon(Filename [, IconNumber := 1, PartNumber := 1])
+`/docs/commands/GuiControls.htm#SB_[MemberName]

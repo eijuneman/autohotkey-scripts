@@ -1,0 +1,5 @@
+FormatTime, var, HHmm, HHmm
+
+MsgBox, %var%
+
+return

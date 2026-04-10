@@ -1,0 +1,73 @@
+# Data files
+*.csv
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+*.db
+*.sqlite
+*.mdb
+
+# Media
+*.mp3
+*.mp4
+*.wav
+*.aac
+*.xmp
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.psd
+*.ico
+
+# Binaries
+*.exe
+*.dll
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# PDFs and docs
+*.pdf
+*.hwp
+*.hwpx
+*.docx
+*.doc
+*.pptx
+*.ppt
+
+# Build artifacts
+*.log
+*.bak
+*.tmp
+*.swp
+*.o
+*.obj
+*.pdb
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+.claude/
+
+# Data folders
+제대로로우데이터/
+wms\ 연습/csvfile*
+wms\ 연습/상품정보/
+woodinshop_scraper/output/
+pdf/
+
+# Large asset dirs
+*.ttf
+*.otf
+*.woff
+*.woff2

@@ -1,0 +1,9 @@
+Space::
+{
+Send, {Ctrl Down}c{ctrl Up}
+Sleep,100
+send, {left 3}v
+Sleep, 100
+Send, {Ctrl Down}v{ctrl Up}
+}
+return

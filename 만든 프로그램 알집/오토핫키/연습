@@ -1,0 +1,30 @@
+		Loop
+		{
+			ImageSearch, x1, y1, 0, 0, 3840, 2160, *50 C:\Users\eijun\OneDrive\문서\IMAGESEARCH\1.png
+
+			if (errorlevel = 1)
+			{
+				sleep 100
+			}
+
+			else if (errorlevel = 2) ; this has no matching if
+			{
+				msgbox, cant search
+			}
+
+			else if (errorlevel = 0) ; this doesnt either
+			{
+				break
+			}
+
+			sleep 100
+		}
+	MouseClick, , %x1%, %y1%
+
+	WinWait, 열기,
+	IfWinNotActive, 열기, , WinActivate, 열기,
+	WinWaitActive, 열기,
+	Sleep, 1000
+	Send, C:\Users\eijun\OneDrive\바탕 화면\cost\0_22년단가변환\%VAR%.xlsx{enter}
+
+

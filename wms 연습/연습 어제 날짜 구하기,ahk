@@ -1,0 +1,8 @@
+; 어제 날짜 구하기
+yesterday := A_Yesterday
+FormatTime, yesterdayFormatted, %yesterday%, yyyy-MM-dd
+
+; 결과 출력
+MsgBox, %yesterdayFormatted%
+
+return

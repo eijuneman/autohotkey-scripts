@@ -1,0 +1,11 @@
+/* 수정 f3
+*/
+
+F3::
+{
+Send, {F3}
+Sleep, 100
+ControlClick, TRzBitBtn3, 제대로판매m 프로 ver7.84 - [상품관리]
+Sleep, 100
+return
+}

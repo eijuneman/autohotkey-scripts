@@ -1,0 +1,39 @@
+#SingleInstance force
+
+; GUI 생성
+Gui, Add, Edit, vDateEdit, yyyy-MM ; 날짜 입력용 에디트 컨트롤
+Gui, Add, Button, gGetDates, Get Dates ; 버튼 컨트롤
+Gui, Show
+return
+
+GetDates:
+    Gui, Submit, NoHide ; 입력값 저장
+    Date := DateEdit ; 입력된 날짜 값 가져오기
+
+    ; 날짜를 DateTime 객체로 변환
+    FormatTime, DateTime, %Date%, yyyy-MM
+    DateTimeObj := ComObjCreate("MSComctlLib.DTPicker")
+    DateTimeObj.Value := DateTime
+
+    ; 월초와 월말 계산
+    MonthStart := DateTimeObj.GetMonthStart(DateTime)
+    MonthEnd := DateTimeObj.GetMonthEnd(DateTime)
+
+    ; 결과 출력
+    MsgBox, 월초: %MonthStart%`n월말: %MonthEnd%
+return
+
+; DateTime 클래스 확장 함수
+MSComctlLib_DTPicker_GetMonthStart(obj, dt) {
+    obj.Value := dt
+    obj.Format = 2 ; dtpCustom
+    obj.CustomFormat = "yyyy-MM-dd"
+    return obj.Value
+}
+
+MSComctlLib_DTPicker_GetMonthEnd(obj, dt) {
+    obj.Value := dt
+    obj.Format = 2 ; dtpCustom
+    obj.CustomFormat = "yyyy-MM-" obj.DayCount
+    return obj.Value
+}

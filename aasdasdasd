@@ -1,0 +1,6 @@
+; 역슬래시 대신 슬래시를 사용하여 경로 문제를 해결해 봅니다.
+PythonScriptPath := "C:/Users/shwoodnew/ShwoodApp/tms_new/send_custom_fcm.py"
+PythonWorkingDir := "C:/Users/shwoodnew/ShwoodApp/tms_new"
+Run, python.exe "%PythonScriptPath%", "%PythonWorkingDir%"
+
+return

@@ -1,0 +1,44 @@
+#SingleInstance, FORCE
+;~ <+9::
+
+
+#Include, %A_ScriptDir%\ScreenCapture.ahk
+
+
+Space::
+CoordMode, MOUSE, SCREEN
+
+Send, ^c
+ClipWait
+company := Clipboard
+
+company := RegExReplace(company, A_Space , Replacement := "")
+RegExMatch(company, "(.*)/(.*)", company)
+
+;~ MsgBox, % company2 "(" company1 ")"
+company = % company2 "(" company1 ")"
+
+MouseGetPos , X1, Y1,
+
+
+
+
+Y1 := Y1 - 360
+
+
+X2 := X1 + 240
+Y2 := Y1 + 300
+
+    DIR2 = C:\Users\shwoodnew\Desktop\DoorOrder\img\재현하늘창시트\%company%.png
+
+;~ MsgBox,%company%`n%X1%`n%Y1%`n%X2%`n%Y2%`n%DIR2%
+screen = % X1 ", " Y1 ", " X2 ", " Y2
+    CaptureScreen(screen, False, DIR2)
+return
+
+NumpadEnter::
+Send, {Enter}
+Sleep, 1000
+Send, {PrintScreen}
+
+return

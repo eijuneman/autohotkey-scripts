@@ -1,0 +1,7 @@
+﻿<?xml version="1.0"?>
+<gui>
+	<win win="1" pos="x976 y157 w1246 h839" max="1">
+		<control h="1515" w="723" x="0" y="0" type="Scintilla" file="\\192.168.0.1\hdd2\일정표 최근\일정표220730 - 복사본\일정표14_2.ahk" hwnd="2" ra="3" last="1"></control>
+		<control h="682" w="177" x="723" y="0" lp="0.80337079" type="Project Explorer" ba="4" hwnd="3"></control>
+		<control h="833" w="177" x="723" y="682" lp="0.80337079" tp="0.45045045" type="Code Explorer" hwnd="4"></control></win>
+</gui>

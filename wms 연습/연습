@@ -1,0 +1,3 @@
+Gui, Add, Picture, x10 y10 w100 h100 vcolor7, %A_ScriptDir%\colour5.png
+gui, show, ,
+return

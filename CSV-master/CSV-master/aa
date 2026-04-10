@@ -1,0 +1,86 @@
+Gui,2:default
+Gui,2:Color, 000000
+Gui,2:Font,  S10 CDefault , FixedSys
+
+F1=test11aa.txt
+ifnotexist,%F1%
+     {
+     Fileappend,BBB;123456AA`r`n,%F1%
+     Fileappend,AAA;987654`r`n,%F1%
+     Fileappend,CCC;55555`r`n,%F1%
+     }
+
+T1=160       ;column1 width
+T2=200       ;column2 width
+
+T1A:=T1
+T2A:=T1+T2
+T3C:=T1+T2+20
+T3B:=T3C+40
+
+Gui,2:Add, ListView,grid r20 w%T3C% +hscroll altsubmit vMLV1 gMLV2, A|B
+LV_ModifyCol(1,T1)
+LV_ModifyCol(2,T2)
+gosub,Fill
+Gui,2: Show, x2 y0 w%T3B% h400 ,LISTVIEWXA
+;Gui,2: Show, AutoSize,LISTVIEWXA
+return
+;----------------------------------------------
+
+Fill:
+LV_Delete()
+loop,read,%F1%
+  {
+  stringsplit,BX,A_LoopReadLine,`;,
+  LV_Add("",BX1,BX2)
+  }
+LV_ModifyCol(1, "Logical SortAsc")   ;sort  column-1
+LV_Modify(LV_GetCount(), "Vis")      ;goto last position
+return
+
+
+MLV2:
+Gui,2:Submit, NoHide
+Gui,2:ListView,MLV1
+RN:=LV_GetNext("C")  ; selected checked
+
+if A_GuiEvent = Rightclick
+  {
+  LV_GetText(C1,A_EventInfo,1)
+  LV_GetText(C2,A_EventInfo,2)
+  msgbox,C1=%c1%`nC2=%c2%
+  return
+  }
+
+
+if A_GuiEvent = Doubleclick
+{
+if (RN=0 or RN="")
+   return
+C1=
+C2=
+MouseGetPos,x,y
+ {
+if x<%T1A%
+   {
+  LV_GetText(C1,A_EventInfo,1)
+   if C1=
+     return
+  msgbox,%C1%`nEventInfo=%A_EventInfo%`nRN=%rn%`nColumn=A
+  return
+   }
+
+if x<%T2A%
+   {
+  LV_GetText(C2,A_EventInfo,2)
+   if C2=
+     return
+  msgbox,%C2%`nEventInfo=%A_EventInfo%`nRN=%rn%`nColumn=B
+  return
+   }
+ }
+}
+return
+;---------------------------------
+2Guiclose:
+Exitapp

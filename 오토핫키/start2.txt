@@ -1,0 +1,256 @@
+﻿; 제대로판매 마우스왼쪽 옆 버튼 활용 도우미
+
+; 전표
+Menu, MyMenu, Add, 열기 모니터 전표, open
+Menu, MyMenu, Add, 닫기 모니터 전표, close
+Menu, MyMenu, Add  ; 라인선
+
+; 인쇄 하위
+Menu, Submenu1, Add, [O O] 2장인쇄, gprint
+Menu, Submenu1, Add, [O X] 단가 O 전표인쇄, oprint
+Menu, Submenu1, Add, [X O] 단가 X 전표인쇄, fprint
+
+; 인쇄 상위
+Menu, MyMenu, Add, 전표인쇄, :Submenu1
+Menu, MyMenu, Add  ; 라인선
+
+; 배송문자 시스템
+Menu, MyMenu, Add, 배송문자 시스템, sch  ; 그 부메뉴 아래에 또다른 메뉴 항목을 추가합니다.
+Menu, MyMenu, Add  ; 라인선
+
+; 인쇄 하위
+Menu, Submenu2, Add, 돋보기 테스크바 제거, taskdel
+
+; 인쇄 상위
+Menu, MyMenu, Add, 기타, :Submenu2
+
+
+
+return
+
+
+
+#z::
+open:
+{
+	CoordMode, MOUSE, SCREEN ; 전표켜기
+	WinActivate, ahk_exe JedaeroM.exe
+	ControlClick, TAdvToolBar1, ahk_exe JedaeroM.exe,,,, NA x400 y20
+	WinWait, ahk_class TfmChitSale
+	WinMove,  ahk_class TfmChitSale, , -2, 0
+	WinShow, 확대화면2
+	WinShow, 확대화면3
+	WinShow, 확대화면1
+	WinShow, 확대화면5
+	WinActivate, ahk_class TfmChitSale
+}
+return
+
+
+
+
+
+
+F12::
+close:
+{
+	IfWinExist, ahk_class TfmChitSale
+		{
+			WinSet, Top, , 슬라이드 쇼				
+			WinActivate, 슬라이드 쇼
+			WinActivate, ahk_class TfmChitSale
+			WinHide, 확대화면5
+			WinHide, 확대화면1
+			WinHide, 확대화면3
+			WinHide, 확대화면2
+			Send, {F12}
+			Sleep,200
+		}
+	else
+		{
+			Sleep,100
+		}
+	
+
+
+	IfWinExist, 닫기 취소확인
+		{
+			WinSet, Top, , 슬라이드 쇼				
+			WinActivate, 슬라이드 쇼
+			Sleep,100
+			WinActivate, 닫기 취소확인
+		}
+		return
+	IfNotExist, 닫기 취소확인
+		{
+			WinSet, Top, , 슬라이드 쇼				
+			WinActivate, 슬라이드 쇼
+			WinActivate, ahk_exe JedaeroM.exe
+		}
+		return	
+
+}
+return
+
+
+
+gprint: ;매장+사무실 전표 인쇄 (2장인쇄)
+{
+	WinMinimize, 제대로 컨트롤러 v1.0
+	Sleep,300
+	WinActivate, ahk_class TfmChitSale
+	sleep,1000
+    Send, {F8}
+	sleep,600
+	MouseClick,L,379,339,,0
+    Send, {F9}	
+	sleep,800
+	MouseClick,L,435,342,,0
+	sleep,2000
+    Send, {F8}
+	sleep,2000
+    MouseClick,L,379,366,,0
+    Send, {F9}	
+	sleep,800
+	MouseClick,L,435,342,,0
+	sleep,2000	
+	Send, {F8}
+	sleep,800
+	MouseClick,L,379,339,,0
+	Send, {F12}
+
+}
+return
+
+
+
+
+oprint: ;사무실 전표 인쇄 (단가0)
+{
+	WinMinimize, 제대로 컨트롤러 v1.0
+	Sleep,300
+	WinActivate, ahk_class TfmChitSale
+	Send, {F8}
+	sleep,600
+	MouseClick,L,379,339,,0
+    Send, {F9}	
+	sleep,800
+	MouseClick,L,435,342,,0
+	sleep,2000
+}
+return
+
+
+
+
+fprint: ;매장 전표 인쇄 (단가X)
+{
+	WinMinimize, 제대로 컨트롤러 v1.0
+	Sleep,300
+	WinActivate, ahk_class TfrxPrintDialog
+	Send, {F8}
+
+	sleep,800
+    MouseClick,L,379,366,,0
+    Send, {F9}	
+	sleep,800
+	MouseClick,L,435,342,,0
+	sleep,2000	
+	Send, {F8}
+	sleep,2000
+	MouseClick,L,379,339,,0
+	Send, {F12}
+}
+return
+
+
+sch:
+{
+	WinMinimize, 제대로 컨트롤러 v1.0
+	run, s누르기.ahk, C:\Users\taeju\Desktop
+
+
+
+
+}
+return
+
+
+
+
+~LButton::
+{
+CoordMode, Mouse, Relative
+	MouseGetPos, ax, ay
+    while GetKeyState("LButton")
+    
+	if (ax > 986 && ax < 1041 && ay < 55)
+	{
+			{
+		   	IfWinActive, ahk_class TfmChitSale
+			{
+			WinSet, Top, , 슬라이드 쇼				
+			WinActivate, 슬라이드 쇼
+			WinActivate, ahk_class TfmChitSale
+			WinHide, 확대화면5
+			WinHide, 확대화면1
+			WinHide, 확대화면3
+			WinHide, 확대화면2
+				Send, {F12}
+				Sleep,200
+			}
+			else
+			{
+				Sleep,100
+			}
+			}
+		IfWinExist, 닫기 취소확인
+		{
+			WinSet, Top, , ahk_class CHslShowAtlView			
+			WinActivate, ahk_class CHslShowAtlView
+			Sleep,100
+			WinActivate, 닫기 취소확인
+				
+		}
+		return
+		IfNotExist, 닫기 취소확인
+		{
+			WinSet, Top, , ahk_class CHslShowAtlView			
+			WinActivate, ahk_class CHslShowAtlView
+			WinActivate, ahk_exe JedaeroM.exe
+
+		}
+		return
+	}
+		
+	if (ax > 355 && ax < 432 && ay > 50 && ay < 86)
+		{
+		   	IfWinActive, ahk_class TfmMain
+			{
+				WinWait, ahk_class TfmChitSale
+				WinMove,  ahk_class TfmChitSale, , -2, 0
+				WinShow, 확대화면2
+				WinShow, 확대화면3
+				WinShow, 확대화면1
+				WinShow, 확대화면5
+				WinActivate, ahk_class TfmChitSale
+			}
+		}
+
+}
+return
+
+taskdel: ; 테스크바에 돋보기 제거하기
+winset, Exstyle, ^0x80, 돋보기1
+winset, Exstyle, ^0x80, 돋보기2
+winset, Exstyle, ^0x80, 돋보기3
+winset, Exstyle, ^0x80, 돋보기4
+winset, Exstyle, ^0x80, 돋보기5
+winset, Exstyle, ^0x80, 확대화면1
+winset, Exstyle, ^0x80, 확대화면2
+winset, Exstyle, ^0x80, 확대화면3
+winset, Exstyle, ^0x80, 확대화면4
+winset, Exstyle, ^0x80, 확대화면5
+
+
+XButton1::Menu, MyMenu, Show  ; 즉, Win-Z 핫키를 누르면 메뉴가 나타납니다.

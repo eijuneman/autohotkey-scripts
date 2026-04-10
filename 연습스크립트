@@ -1,0 +1,27 @@
+timeout := 300000  ; 5분(1분 = 60000밀리초)
+lastAction := A_TickCount
+
+SetTimer, CheckInactive, %timeout%
+return
+
+CheckInactive:
+currentTick := A_TickCount
+inactiveTime := currentTick - lastAction
+if (inactiveTime >= timeout) {
+    MsgBox, 0, , 5분 동안 이벤트가 없습니다!
+}
+return
+
+~$*LButton::
+~$*RButton::
+~$*MButton::
+~$*WheelUp::
+~$*WheelDown::
+~$*WheelLeft::
+~$*WheelRight::
+~$*XButton1::
+~$*XButton2::
+~$*WheelUp::
+~$*WheelDown::
+lastAction := A_TickCount
+return
