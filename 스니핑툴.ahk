@@ -7,9 +7,49 @@
 
 #SingleInstance, Force
 #NoEnv
+
+; ===== 종료 원인 추적 로그 =====
+global g_LogFile := "C:\Temp\snipping_tool.log"
+FileCreateDir, C:\Temp
+FormatTime, _t,, yyyy-MM-dd HH:mm:ss
+FileAppend, % _t " | === START === PID=" DllCall("GetCurrentProcessId") " bits=" (A_PtrSize*8) " unicode=" A_IsUnicode " ver=" A_AhkVersion "`r`n", %g_LogFile%
+
 Menu, TRAY, Icon, %A_ScriptDir%\Mushroom - Mini.ico
 SetBatchLines,-1
 SetWinDelay,-1
+
+OnExit("LogExit")
+SetTimer, LogHeartbeat, 60000   ; 60초마다 살아있음 기록 (함수 이름 직접 전달)
+
+LogHeartbeat() {
+    global g_LogFile
+    proc := DllCall("GetCurrentProcess", "Ptr")
+    gdi  := DllCall("GetGuiResources", "Ptr", proc, "UInt", 0)
+    usr  := DllCall("GetGuiResources", "Ptr", proc, "UInt", 1)
+    ; WorkingSet 메모리(MB)
+    VarSetCapacity(pmc, 72, 0), NumPut(72, pmc, 0, "UInt")
+    DllCall("psapi.dll\GetProcessMemoryInfo", "Ptr", proc, "Ptr", &pmc, "UInt", 72)
+    memMB := Round(NumGet(pmc, 16, "Ptr") / 1048576, 1)
+    FormatTime, t,, yyyy-MM-dd HH:mm:ss
+    FileAppend, % t " | HEARTBEAT  mem=" memMB "MB  gdi=" gdi "  user=" usr "  hotkey=" A_ThisHotkey "`r`n", %g_LogFile%
+}
+
+; 핫키/함수 진입 기록용 헬퍼
+LogHit(tag) {
+    global g_LogFile
+    FormatTime, t,, yyyy-MM-dd HH:mm:ss
+    FileAppend, % t " | HIT   " tag "`r`n", %g_LogFile%
+}
+
+LogExit(ExitReason, ExitCode) {
+    global g_LogFile
+    proc := DllCall("GetCurrentProcess", "Ptr")
+    gdi  := DllCall("GetGuiResources", "Ptr", proc, "UInt", 0)
+    usr  := DllCall("GetGuiResources", "Ptr", proc, "UInt", 1)
+    FormatTime, t,, yyyy-MM-dd HH:mm:ss
+    FileAppend, % t " | === EXIT === reason=" ExitReason "  code=" ExitCode "  lastErr=" A_LastError "  gdi=" gdi "  user=" usr "  prior=" A_PriorHotkey "`r`n", %g_LogFile%
+}
+; ===== 종료 원인 추적 로그 끝 =====
 ;~ #Include Gdip.ahk
 ;~ #Include Tesseract.ahk
 
@@ -23,6 +63,29 @@ if((A_PtrSize=8&&A_IsCompiled="")||!A_IsUnicode){ ;32 bit=4  ;64 bit=8
     ExitApp
     return
 }
+
+; GDI+ 를 스크립트 수명 동안 항상 초기화 상태로 유지
+; 근본 원인: Gdip.ahk 의 Gdip_Shutdown 이 FreeLibrary("gdiplus") 를 호출하지만,
+; Gdip_Startup 은 첫 호출 때만 LoadLibrary 를 한다. 즉 Startup/Shutdown 반복 시
+; LoadLibrary 1회 vs FreeLibrary N회 → refcount 불일치 → gdiplus.dll 이 언로드됨
+; → 이후 GDI+ 함수 호출 시 APPCRASH 0xc0000005 (gdiplus.DLL_unloaded).
+; 해결: GetModuleHandleEx 에 GET_MODULE_HANDLE_EX_FLAG_PIN (0x01) 을 주어
+; gdiplus.dll 을 프로세스 종료 시까지 영구 Pin — FreeLibrary 가 무력화됨.
+global g_PersistentGdipToken := Gdip_Startup()
+DllCall("GetModuleHandleEx", "UInt", 0x01, "Str", "gdiplus", "Ptr*", _pinnedGdiplus)
+FormatTime, _dt,, yyyy-MM-dd HH:mm:ss
+FileAppend, % _dt " | INFO  gdiplus.dll pinned  handle=" _pinnedGdiplus " token=" g_PersistentGdipToken "`r`n", %g_LogFile%
+
+; ===== 필기(메모) 기능 설정 =====
+; 펜 색상: ARGB 8자리 hex. 앞 2자리=불투명도(FF=100%), 뒤 6자리=RGB
+global g_PenColorARGB := "0xFFFF3B30"   ; 빨강 (iOS 계열)
+global g_PenWidth     := 3              ; 펜 두께(px)
+global g_EraserWidth  := 24             ; 지우개 크기(px, 정사각 영역)
+global g_UndoMaxDepth := 100            ; Ctrl+Z 최대 단계(벡터 기반이라 넉넉히)
+
+; hwnd → 스트로크 배열. 각 스트로크 = {type:"draw"|"erase", path:[[x,y],...]}.
+; 벡터 기록 방식이라 메모리 사용량이 DIB 스냅샷 대비 1/1000 이하.
+global g_SCW_Strokes := {}
 
 OnMessage(0x0204, "WM_RBUTTONDOWN")
 WM_RBUTTONDOWN()
@@ -39,6 +102,7 @@ WM_RBUTTONDOWN()
 }
 
 OnMessage(0x0203, "WM_LBUTTONDBLCLK") ;double click to downsize. Double click again to resize.
+OnMessage(0x0002, "SCW_OnDestroy")    ; WM_DESTROY: 크롭 창 닫힘 시 GDI 자원 해제
 WM_LBUTTONDBLCLK() {
 
    global
@@ -58,8 +122,10 @@ WM_LBUTTONDBLCLK() {
 
 ;Hotkey to select area
 #Lbutton::
+LogHit("#LButton begin")
 SCW_ScreenClip2Win(clip:=0)
 WinActivate, ScreenClippingWindow ahk_class AutoHotkeyGUI
+LogHit("#LButton end")
 return
 
 ;Hotkey to select area, copy to clipboard without border, no floating window (Win+LAlt+LButton)
@@ -82,18 +148,20 @@ SCW_ScreenClipToClipboard() {
    pBitmap := Gdip_BitmapFromScreen(Area)
    Gdip_SetBitmapToClipboard(pBitmap)
    Gdip_DisposeImage(pBitmap)
-   Gdip_Shutdown("pToken")
+   Gdip_Shutdown(pToken)
 }
 
 ;Hotkeys to run on clippings
 #IfWinActive, ScreenClippingWindow ahk_class AutoHotkeyGUI
 
+; Ctrl+C: 현재 크롭 창(주석 포함) → 클립보드 (저장 없음)
 ^c::
-SCW_Win2Clipboard(1)      ; copy selected win to clipboard  Change to (1) if want border and (0) for no border
+    SCW_CopyActiveToClipboard()
 return
 
+; Ctrl+S: 현재 크롭 창(주석 포함) → 바탕화면 PNG 저장 (클립보드 미변경)
 ^s::
-SCW_Win2File(0)  ;save selected clipping on desktop as .png  ; this was submited by tervon; border not savd even if (1)
+    SCW_SaveActiveToFile()
 return
 
 Left::
@@ -120,9 +188,47 @@ Pos_Y += 30
 WinMove, A, , Pos_X, Pos_Y
 return
 
-Esc:: winclose, A ;contribued by tervon
-Del:: winclose, A ;contributed by tervon
+Esc::
+    LogHit("Esc begin → winclose A")
+    winclose, A
+    LogHit("Esc end")
+return
+Del::
+    LogHit("Del begin → winclose A")
+    winclose, A
+    LogHit("Del end")
+return
 
+#IfWinActive
+
+; ===== 필기(메모) 기능 =====
+; LCtrl + 좌클릭 드래그 → 빨간 펜으로 그리기
+; LAlt  + 좌클릭 드래그 → 지우개
+#If SCW_IsClipWindowUnderMouse()
+<^LButton::
+    LogHit("<^LButton begin")
+    MouseGetPos,,, _scwHwndUnderMouse
+    if _scwHwndUnderMouse
+        SCW_DrawOnWindow(_scwHwndUnderMouse)
+    LogHit("<^LButton end")
+return
+
+<!LButton::
+    LogHit("<!LButton begin")
+    MouseGetPos,,, _scwHwndUnderMouse
+    if _scwHwndUnderMouse
+        SCW_EraseOnWindow(_scwHwndUnderMouse)
+    LogHit("<!LButton end")
+return
+#If
+
+; Ctrl+Z 언두: 크롭 창이 활성 상태일 때만
+#IfWinActive, ScreenClippingWindow ahk_class AutoHotkeyGUI
+^z::
+    WinGet, _scwActiveHwnd, ID, A
+    if _scwActiveHwnd
+        SCW_UndoOnWindow(_scwActiveHwnd)
+return
 #IfWinActive
 
 MenuHandler:
@@ -136,7 +242,7 @@ if (A_ThisMenuItemPos = 1)
  pBitmap := Gdip_BitmapFromScreen(nbX "|" nbY "|" nbW "|" nbH)
  Gdip_SetBitmapToClipboard(pBitmap)
  Gdip_DisposeImage(pBitmap)
- Gdip_Shutdown("pToken")
+ Gdip_Shutdown(pToken)
 }
 
 if (A_ThisMenuItemPos = 2)
@@ -269,7 +375,7 @@ SCW_ScreenClip2Win(clip=0) {
 
 ;*******************************************************
    SCW_CreateLayeredWinMod(GuiNum,pBitmap,v1,v2, SCW_Reg("DrawCloseButton"))
-   Gdip_Shutdown("pToken")
+   Gdip_Shutdown(pToken)
 if clip=1
 {
  ;********************** added to copy to clipboard by default*********************************
@@ -355,7 +461,30 @@ SCW_CreateLayeredWinMod(GuiNum,pBitmap,x,y,DrawCloseButton=0) {
       Gdip_DeletePen(pPen1), Gdip_DeletePen(pPen2)
       UpdateLayeredWindow(hwnd, hdc, x-3, y-3, Width+6, Height+6)
    }
-   SelectObject(hdc, obm), DeleteObject(hbm), DeleteDC(hdc), Gdip_DeleteGraphics(G)
+   ; 그리기 자원(hdc/hbm/G) 은 창 수명 동안 유지 — LCtrl 드래그 메모 기능에서 재사용.
+   ; 정리는 SCW_OnDestroy (WM_DESTROY) 에서 수행.
+   totalW := (g_noBorder ? Width  : Width+6)
+   totalH := (g_noBorder ? Height : Height+6)
+
+   ; 지우개용 clean 스냅샷: 현재 DIB(원본 이미지+테두리)를 별도 hdc/hbm 에 복사
+   cleanHDC := CreateCompatibleDC()
+   cleanHBM := CreateDIBSection(totalW, totalH)
+   cleanObm := SelectObject(cleanHDC, cleanHBM)
+   BitBlt(cleanHDC, 0, 0, totalW, totalH, hdc, 0, 0)
+
+   SCW_Reg("H" hwnd "#hdc",    hdc)
+   SCW_Reg("H" hwnd "#hbm",    hbm)
+   SCW_Reg("H" hwnd "#obm",    obm)
+   SCW_Reg("H" hwnd "#G",      G)
+   SCW_Reg("H" hwnd "#cleanHDC", cleanHDC)
+   SCW_Reg("H" hwnd "#cleanHBM", cleanHBM)
+   SCW_Reg("H" hwnd "#cleanObm", cleanObm)
+   SCW_Reg("H" hwnd "#ImgW",   Width)
+   SCW_Reg("H" hwnd "#ImgH",   Height)
+   SCW_Reg("H" hwnd "#OffX",   (g_noBorder ? 0 : 3))
+   SCW_Reg("H" hwnd "#OffY",   (g_noBorder ? 0 : 3))
+   SCW_Reg("H" hwnd "#TotalW", totalW)
+   SCW_Reg("H" hwnd "#TotalH", totalH)
    SCW_Reg("G" GuiNum "#HWND", hwnd)
    SCW_Reg("G" GuiNum "#XClose", Width+6-CloseButton)
    SCW_Reg("G" GuiNum "#YClose", CloseButton)
@@ -367,6 +496,11 @@ SCW_LBUTTONDOWN() {
     WinGetTitle, Title, ahk_id %WinUMID%
    if Title = ScreenClippingWindow
    {
+      if GetKeyState("LControl", "P")   ; LCtrl 누른 채 좌클릭 → 필기(메모) 모드
+      {
+         SCW_DrawOnWindow(WinUMID)
+         return 1
+      }
       PostMessage, 0xA1, 2,,, ahk_id %WinUMID%
       KeyWait, Lbutton
       CoordMode, mouse, Relative
@@ -386,6 +520,316 @@ SCW_Reg(variable, value="") {
    }
    Else
    kxucfp%variable%pqzmdk = %value%
+}
+
+; ============================================================================
+; 떠있는 크롭 창 위 LCtrl + 좌클릭 드래그 → 필기(메모) 기능
+; ============================================================================
+
+; #If 표현식용: 마우스 커서 아래의 창이 ScreenClippingWindow(크롭창) 인지 판별
+SCW_IsClipWindowUnderMouse() {
+    MouseGetPos,,, winUM
+    if !winUM
+        return false
+    WinGetTitle, t, ahk_id %winUM%
+    return (t = "ScreenClippingWindow")
+}
+
+; 필기 모드: LCtrl+좌클릭 드래그
+SCW_DrawOnWindow(hwnd) {
+   global g_PenColorARGB, g_PenWidth, g_LogFile
+   hdc    := SCW_Reg("H" hwnd "#hdc")
+   OffX   := SCW_Reg("H" hwnd "#OffX")
+   OffY   := SCW_Reg("H" hwnd "#OffY")
+   ImgW   := SCW_Reg("H" hwnd "#ImgW")
+   ImgH   := SCW_Reg("H" hwnd "#ImgH")
+   TotalW := SCW_Reg("H" hwnd "#TotalW")
+   TotalH := SCW_Reg("H" hwnd "#TotalH")
+   if !hdc
+      return
+
+   ; 새 스트로크 시작(언두 단위)
+   stroke := SCW_StrokePush(hwnd, "draw")
+
+   ; Startup/Shutdown 을 쌍으로 맞춰서 토큰 누수 방지 (원래는 Shutdown 누락이었음)
+   _drawToken := Gdip_Startup()
+   G := Gdip_GraphicsFromHDC(hdc)
+   if !G {
+      FormatTime, _dt,, yyyy-MM-dd HH:mm:ss
+      FileAppend, % _dt " | WARN  SCW_DrawOnWindow Gdip_GraphicsFromHDC returned 0  hwnd=" hwnd " hdc=" hdc "`r`n", %g_LogFile%
+      Gdip_Shutdown(_drawToken)
+      return
+   }
+   Gdip_SetSmoothingMode(G, 4)
+   pPen := Gdip_CreatePen(g_PenColorARGB, g_PenWidth)
+
+   CoordMode, Mouse, Screen
+   WinGetPos, wx, wy,,, ahk_id %hwnd%
+   MouseGetPos, sx, sy
+   px := sx - wx, py := sy - wy
+   havePrev := SCW_InBox(px, py, OffX, OffY, ImgW, ImgH)
+   stroke.path.Push([px, py])
+
+   While, GetKeyState("LButton", "P")
+   {
+      MouseGetPos, sx, sy
+      cx := sx - wx, cy := sy - wy
+      inNow := SCW_InBox(cx, cy, OffX, OffY, ImgW, ImgH)
+      stroke.path.Push([cx, cy])
+
+      if (havePrev && inNow)
+      {
+         Gdip_DrawLine(G, pPen, px, py, cx, cy)
+         UpdateLayeredWindow(hwnd, hdc, "", "", TotalW, TotalH)
+      }
+      px := cx, py := cy, havePrev := inNow
+      Sleep, 5
+   }
+
+   Gdip_DeletePen(pPen)
+   Gdip_DeleteGraphics(G)
+   Gdip_Shutdown(_drawToken)
+}
+
+; 지우개 모드: LAlt+좌클릭 드래그 — clean 스냅샷에서 원본 픽셀 복원
+SCW_EraseOnWindow(hwnd) {
+   global g_EraserWidth
+   hdc      := SCW_Reg("H" hwnd "#hdc")
+   cleanHDC := SCW_Reg("H" hwnd "#cleanHDC")
+   OffX   := SCW_Reg("H" hwnd "#OffX")
+   OffY   := SCW_Reg("H" hwnd "#OffY")
+   ImgW   := SCW_Reg("H" hwnd "#ImgW")
+   ImgH   := SCW_Reg("H" hwnd "#ImgH")
+   TotalW := SCW_Reg("H" hwnd "#TotalW")
+   TotalH := SCW_Reg("H" hwnd "#TotalH")
+   if !hdc || !cleanHDC
+      return
+
+   stroke := SCW_StrokePush(hwnd, "erase")
+
+   CoordMode, Mouse, Screen
+   WinGetPos, wx, wy,,, ahk_id %hwnd%
+
+   While, GetKeyState("LButton", "P")
+   {
+      MouseGetPos, sx, sy
+      cx := sx - wx, cy := sy - wy
+      stroke.path.Push([cx, cy])
+      SCW_ApplyEraseAt(hdc, cleanHDC, cx, cy, OffX, OffY, ImgW, ImgH)
+      UpdateLayeredWindow(hwnd, hdc, "", "", TotalW, TotalH)
+      Sleep, 5
+   }
+}
+
+; 지우개 사각 영역 적용(이미지 영역 내부로 클리핑 후 BitBlt 한 번)
+SCW_ApplyEraseAt(hdc, cleanHDC, cx, cy, OffX, OffY, ImgW, ImgH) {
+   global g_EraserWidth
+   half := g_EraserWidth // 2
+   rx := cx - half, ry := cy - half
+   rw := g_EraserWidth, rh := g_EraserWidth
+   if (rx < OffX)
+      rw -= (OffX - rx), rx := OffX
+   if (ry < OffY)
+      rh -= (OffY - ry), ry := OffY
+   if (rx + rw > OffX + ImgW)
+      rw := OffX + ImgW - rx
+   if (ry + rh > OffY + ImgH)
+      rh := OffY + ImgH - ry
+   if (rw > 0 && rh > 0)
+      BitBlt(hdc, rx, ry, rw, rh, cleanHDC, rx, ry)
+}
+
+; 새 스트로크를 생성해 스택에 push, 반환(호출자가 path 에 point 를 추가함)
+SCW_StrokePush(hwnd, type) {
+   global g_SCW_Strokes, g_UndoMaxDepth
+   if !g_SCW_Strokes.HasKey(hwnd)
+      g_SCW_Strokes[hwnd] := []
+   strokes := g_SCW_Strokes[hwnd]
+   ; 최대 깊이 초과 시 가장 오래된 것 drop(메모리 안전장치)
+   while (strokes.Length() >= g_UndoMaxDepth)
+      strokes.RemoveAt(1)
+   newStroke := {type: type, path: []}
+   strokes.Push(newStroke)
+   return newStroke
+}
+
+; Ctrl+Z 언두: 마지막 스트로크 pop → clean 에서 시작해 나머지 모두 replay
+SCW_UndoOnWindow(hwnd) {
+   global g_SCW_Strokes
+   hdc      := SCW_Reg("H" hwnd "#hdc")
+   cleanHDC := SCW_Reg("H" hwnd "#cleanHDC")
+   TotalW   := SCW_Reg("H" hwnd "#TotalW")
+   TotalH   := SCW_Reg("H" hwnd "#TotalH")
+   if !hdc || !cleanHDC
+      return
+   if !g_SCW_Strokes.HasKey(hwnd)
+      return
+   strokes := g_SCW_Strokes[hwnd]
+   if (strokes.Length() <= 0)
+      return
+
+   strokes.Pop()
+   SCW_ReplayStrokes(hwnd)
+}
+
+; clean 상태에서 시작해 현재 스트로크 배열을 순서대로 다시 적용
+SCW_ReplayStrokes(hwnd) {
+   global g_SCW_Strokes, g_PenColorARGB, g_PenWidth
+   hdc      := SCW_Reg("H" hwnd "#hdc")
+   cleanHDC := SCW_Reg("H" hwnd "#cleanHDC")
+   OffX     := SCW_Reg("H" hwnd "#OffX")
+   OffY     := SCW_Reg("H" hwnd "#OffY")
+   ImgW     := SCW_Reg("H" hwnd "#ImgW")
+   ImgH     := SCW_Reg("H" hwnd "#ImgH")
+   TotalW   := SCW_Reg("H" hwnd "#TotalW")
+   TotalH   := SCW_Reg("H" hwnd "#TotalH")
+   if !hdc || !cleanHDC
+      return
+
+   ; 1) clean 전체를 hdc 로 BitBlt → 모든 주석 초기화
+   BitBlt(hdc, 0, 0, TotalW, TotalH, cleanHDC, 0, 0)
+
+   if g_SCW_Strokes.HasKey(hwnd)
+   {
+      strokes := g_SCW_Strokes[hwnd]
+      Gdip_Startup()
+      G := Gdip_GraphicsFromHDC(hdc)
+      Gdip_SetSmoothingMode(G, 4)
+      pPen := Gdip_CreatePen(g_PenColorARGB, g_PenWidth)
+
+      ; 2) 각 스트로크를 순서대로 재적용
+      for i, stroke in strokes
+      {
+         path := stroke.path
+         n := path.Length()
+         if (stroke.type = "draw")
+         {
+            ; 원본 로직과 동일: havePrev && inNow 일 때만 선
+            havePrev := false
+            px := 0, py := 0
+            j := 1
+            while (j <= n)
+            {
+               pt := path[j]
+               cx := pt[1], cy := pt[2]
+               inNow := SCW_InBox(cx, cy, OffX, OffY, ImgW, ImgH)
+               if (havePrev && inNow)
+                  Gdip_DrawLine(G, pPen, px, py, cx, cy)
+               px := cx, py := cy, havePrev := inNow
+               j++
+            }
+         }
+         else if (stroke.type = "erase")
+         {
+            j := 1
+            while (j <= n)
+            {
+               pt := path[j]
+               SCW_ApplyEraseAt(hdc, cleanHDC, pt[1], pt[2], OffX, OffY, ImgW, ImgH)
+               j++
+            }
+         }
+      }
+
+      Gdip_DeletePen(pPen)
+      Gdip_DeleteGraphics(G)
+   }
+
+   UpdateLayeredWindow(hwnd, hdc, "", "", TotalW, TotalH)
+}
+
+SCW_InBox(x, y, ox, oy, w, h) {
+   return (x >= ox && y >= oy && x < ox + w && y < oy + h)
+}
+
+; ===== Ctrl+C / Ctrl+S — 활성 크롭창의 현재 상태를 클립보드/파일에 보냄 =====
+
+SCW_CopyActiveToClipboard() {
+   WinGet, hwnd, ID, A
+   if !hwnd
+      return
+   OffX := SCW_Reg("H" hwnd "#OffX")
+   OffY := SCW_Reg("H" hwnd "#OffY")
+   ImgW := SCW_Reg("H" hwnd "#ImgW")
+   ImgH := SCW_Reg("H" hwnd "#ImgH")
+   if !ImgW
+      return
+   WinGetPos, wx, wy,,, ahk_id %hwnd%
+   Gdip_Startup()
+   pBmp := Gdip_BitmapFromScreen((wx+OffX) "|" (wy+OffY) "|" ImgW "|" ImgH)
+   if pBmp
+   {
+      Gdip_SetBitmapToClipboard(pBmp)
+      Gdip_DisposeImage(pBmp)
+   }
+}
+
+SCW_SaveActiveToFile() {
+   WinGet, hwnd, ID, A
+   if !hwnd
+      return
+   OffX := SCW_Reg("H" hwnd "#OffX")
+   OffY := SCW_Reg("H" hwnd "#OffY")
+   ImgW := SCW_Reg("H" hwnd "#ImgW")
+   ImgH := SCW_Reg("H" hwnd "#ImgH")
+   if !ImgW
+      return
+   WinGetPos, wx, wy,,, ahk_id %hwnd%
+   Gui +LastFound +OwnDialogs +AlwaysOnTop
+   InputBox, fname, , Save File Name As:, , 140, 130, , , , , %A_Now%
+   if ErrorLevel
+      return
+   Gdip_Startup()
+   pBmp := Gdip_BitmapFromScreen((wx+OffX) "|" (wy+OffY) "|" ImgW "|" ImgH)
+   if pBmp
+   {
+      Gdip_SaveBitmapToFile(pBmp, A_Desktop "\" fname ".PNG")
+      Gdip_DisposeImage(pBmp)
+      MsgBox, 4096, , 바탕화면에 저장됨!
+   }
+}
+
+; WM_DESTROY (0x0002): 크롭 창이 닫힐 때 등록된 GDI 자원 해제
+SCW_OnDestroy(wParam, lParam, msg, hwnd) {
+   global g_SCW_Strokes, g_LogFile
+   G := SCW_Reg("H" hwnd "#G")
+   if !G
+      return
+   FormatTime, _dt,, yyyy-MM-dd HH:mm:ss
+   FileAppend, % _dt " | HIT   SCW_OnDestroy begin  hwnd=" hwnd "`r`n", %g_LogFile%
+   hdc := SCW_Reg("H" hwnd "#hdc")
+   hbm := SCW_Reg("H" hwnd "#hbm")
+   obm := SCW_Reg("H" hwnd "#obm")
+   cleanHDC := SCW_Reg("H" hwnd "#cleanHDC")
+   cleanHBM := SCW_Reg("H" hwnd "#cleanHBM")
+   cleanObm := SCW_Reg("H" hwnd "#cleanObm")
+
+   Gdip_DeleteGraphics(G)
+   SelectObject(hdc, obm)
+   DeleteObject(hbm)
+   DeleteDC(hdc)
+
+   ; clean 스냅샷 해제
+   if cleanHDC {
+      SelectObject(cleanHDC, cleanObm)
+      DeleteObject(cleanHBM)
+      DeleteDC(cleanHDC)
+   }
+
+   ; 벡터 스트로크 데이터 제거
+   if g_SCW_Strokes.HasKey(hwnd)
+      g_SCW_Strokes.Delete(hwnd)
+
+   ; 중복 해제 방지 마킹
+   SCW_Reg("H" hwnd "#G",         0)
+   SCW_Reg("H" hwnd "#hdc",       0)
+   SCW_Reg("H" hwnd "#hbm",       0)
+   SCW_Reg("H" hwnd "#obm",       0)
+   SCW_Reg("H" hwnd "#cleanHDC",  0)
+   SCW_Reg("H" hwnd "#cleanHBM",  0)
+   SCW_Reg("H" hwnd "#cleanObm",  0)
+   FormatTime, _dt2,, yyyy-MM-dd HH:mm:ss
+   FileAppend, % _dt2 " | HIT   SCW_OnDestroy end    hwnd=" hwnd "`r`n", %g_LogFile%
 }
 
 SCW_Default(ByRef Variable,DefaultValue) {
@@ -408,7 +852,7 @@ SCW_Win2Clipboard(KeepBorders=0) {
       pBitmap2 := SCW_CropImage(pBitmap, 3, 3, w-6, h-6)
       Gdip_SetBitmapToClipboard(pBitmap2)
       Gdip_DisposeImage(pBitmap), Gdip_DisposeImage(pBitmap2)
-      Gdip_Shutdown("pToken")
+      Gdip_Shutdown(pToken)
    }
 }
 
@@ -428,7 +872,7 @@ SCW_Win2Clipboard2(DeleteBorders:=1, Hwnd := "")
 	pToken := Gdip_Startup()
 	pBitmap := Gdip_BitmapFromScreen(X "|" Y "|" W "|" H)
 	Gdip_SetBitmapToClipboard(pBitmap)
-	Gdip_Shutdown("pToken")
+	Gdip_Shutdown(pToken)
 }
 
 SCW_CropImage(pBitmap, x, y, w, h) {
@@ -469,7 +913,7 @@ SCW_Win2File(KeepBorders=0, Email=0, FromMenu=0) {
    {
    Gdip_SaveBitmapToFile(pBitmap2, FilePath) ;Exports automatcially to file
    Gdip_DisposeImage(pBitmap), Gdip_DisposeImage(pBitmap2)
-   Gdip_Shutdown("pToken")
+   Gdip_Shutdown(pToken)
    }
 
    If(Email=0)
@@ -3100,6 +3544,7 @@ Gdip_RFromARGB(ARGB)
 {
 	return (0x00ff0000 & ARGB) >> 16
 }
+
 
 ;#####################################################################################
 
