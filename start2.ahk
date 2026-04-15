@@ -1354,7 +1354,7 @@ timer0:
 	}
 	else
 	{
-		WinKill, 배송문자 시스템  -by shwood-
+		;~ WinKill, 배송문자 시스템  -by shwood-
 		;~ Sleep, 2000
 	}
 

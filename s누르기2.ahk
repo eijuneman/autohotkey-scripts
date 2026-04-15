@@ -237,31 +237,35 @@ Gui, Add, Edit, x10 y+0 w190 h150 -VScroll v10,
 
 ;~ Gui, Add, Button, x10 y+10 w190 h50 g추출, 추출
 
-Gui, Add, Button, x10 y+15 w90 h40 g거래처원장 v거래처원장 , 거래처원장`n서버에올리기
+;~ Gui, Add, Button, x10 y+15 w90 h40 g거래처원장 v거래처원장 , 거래처원장`n서버에올리기
+;~ Gui, Font, CDefault W700, Malgun Gothic
+;~ Gui, Add, Button, x+9 w90 h40 g거래처원장_상세 v거래처원장_상세, 거래처원장`n상세올리기
+;~ Gui, Font, CDefault W400, Malgun Gothic
+
+; 최근 출고지 (fb_chittop 에서 G_NAME 일치 검색) — 더블클릭 시 셀 값 클립보드 복사
+Gui, Add, Text, x10 y+15 w180 h20 , 최근 출고지 (더블클릭=복사)
+Gui, Add, ListView, x10 y+0 w190 h140 -Multi -HScroll gRecentShipmentsEvent vRecentShipmentsLV, 내역|출고지
+
+Gui, Add, Button, x10 y+15 w90 h40 g조합1 v조합1 Hidden, (매장손님)`n조합
 Gui, Font, CDefault W700, Malgun Gothic
-Gui, Add, Button, x+9 w90 h40 g거래처원장_상세 v거래처원장_상세, 거래처원장`n상세올리기
+Gui, Add, Button, xp yp w90 h40 g조합2 v조합2 Hidden, (배송손님)`n조합
 Gui, Font, CDefault W400, Malgun Gothic
 
-Gui, Add, Button, x10 y+15 w90 h40 g조합1 v조합1 , (매장손님)`n조합
+Gui, Add, Button, xp yp w90 h60 g문자발송1 v문자발송1 Hidden, (매장손님)`n문자발송
 Gui, Font, CDefault W700, Malgun Gothic
-Gui, Add, Button, x+9 w90 h40 g조합2 v조합2, (배송손님)`n조합
-Gui, Font, CDefault W400, Malgun Gothic
-
-Gui, Add, Button, x10 y+5 w90 h60  g문자발송1 v문자발송1, (매장손님)`n문자발송
-Gui, Font, CDefault W700, Malgun Gothic
-Gui, Add, Button, x+9 w90 h60 g문자발송2 v문자발송2, (배송손님)`n문자발송
+Gui, Add, Button, xp yp w90 h60 g문자발송2 v문자발송2 Hidden, (배송손님)`n문자발송
 Gui, Font, CDefault W400, Malgun Gothic
 
 
-Gui, Add, Button, x10 y+15 w90 h40 g완료조합1 v완료조합1, (매장완료)`n조합
+Gui, Add, Button, xp yp w90 h40 g완료조합1 v완료조합1 Hidden, (매장완료)`n조합
 Gui, Font, CDefault W700, Malgun Gothic
-Gui, Add, Button, x+9 w90 h40 g완료조합2 v완료조합2, (배송완료)`n조합
+Gui, Add, Button, xp yp w90 h40 g완료조합2 v완료조합2 Hidden, (배송완료)`n조합
 Gui, Font, CDefault W400, Malgun Gothic
 
 
-Gui, Add, Button, x10 y+5 w90 h60  g완료발송1 v완료발송1, (매장손님)`n출고완료`n문자발송
+Gui, Add, Button, xp yp w90 h60 g완료발송1 v완료발송1 Hidden, (매장손님)`n출고완료`n문자발송
 Gui, Font, CDefault W700, Malgun Gothic
-Gui, Add, Button, x+9 w90 h60 g완료발송2 v완료발송2, (배송손님)`n배송완료`n문자발송
+Gui, Add, Button, xp yp w90 h60 g완료발송2 v완료발송2 Hidden, (배송손님)`n배송완료`n문자발송
 
 
 
@@ -304,6 +308,9 @@ GuiControl, disable, 완료조합2
 		Sleep, 1
 	}
 		Sleep, 500
+
+; 매출전표/견적서 창 종료 감시: 창이 사라지면 Edit/DropDownList 초기화
+SetTimer, WatchSourceWindows, 500
 ;~ WinActivate, ahk_exe JedaeroM.exe
 ;~ SoundBeep, 100, 10
 ;~ SoundBeep, 100, 10
@@ -985,6 +992,7 @@ ControlClick, TDBGridEh1 , ahk_class TfmChitSale,,,,x150 y32
 ControlSetText, edit9, , %WINTITLE%
 ControlGetText, 거래처, TRzEdit8, ahk_class TfmChitSale
 ControlSetText, Edit2, %거래처%, %WINTITLE%
+Gosub, UpdateRecentShipments
 ControlGetText, 배송날짜, TRzDBDateTimeEdit1, ahk_class TfmChitSale
 
 NewStr := RegExReplace(배송날짜, "-" , Replacement := "")
@@ -1047,6 +1055,7 @@ else
 ControlGetText, 받는분, Edit1, %WINTITLE%
 ControlGetText, 거래처, TRzEdit2, ahk_class TfmEstimate2
 ControlSetText, Edit2, %거래처%, %WINTITLE%
+Gosub, UpdateRecentShipments
 ControlGetText, 배송날짜, TRzDBDateTimeEdit1, ahk_class TfmEstimate2
 
 
@@ -2926,6 +2935,128 @@ GuiClose:
 ExitApp
 return
 }
+
+; 매출전표(TfmChitSale)/견적서(TfmEstimate2) 창이 모두 사라지면
+; Edit 및 DropDownList 컨트롤을 빈 값으로 초기화한다.
+WatchSourceWindows:
+{
+	global WatchSourceWasPresent, 상태
+	isPresent := ( WinExist("ahk_class TfmChitSale") or WinExist("ahk_class TfmEstimate2") )
+	if ( WatchSourceWasPresent && !isPresent )
+	{
+		GuiControl, , 1,
+		GuiControl, , 2,
+		GuiControl, , 3,
+		GuiControl, , 4,
+		GuiControl, , 5,
+		GuiControl, , 6,
+		GuiControl, , 7,
+		GuiControl, , 8,
+		GuiControl, , 10,
+		GuiControl, , 11,
+		GuiControl, Choose, ddl, 0
+		GuiControl, Choose, ddl2, 0
+		GuiControl, Choose, trans, 0
+		IfWinExist, 도어회사선택
+			WinClose, 도어회사선택
+		IfWinExist, 재단유무
+			WinClose, 재단유무
+		IfWinExist, 배송자 선택
+			WinClose, 배송자 선택
+		Gui, ListView, RecentShipmentsLV
+		LV_Delete()
+	}
+	; 매입/매출 구분 표시 (v9) 를 항상 현재 창 상태에 동기화
+	if ( WinExist("ahk_class TfmChitSale") )
+	{
+		상태 := "매출"
+		GuiControl, , 9, 매출
+	}
+	else if ( WinExist("ahk_class TfmEstimate2") )
+	{
+		상태 := "매입"
+		GuiControl, , 9, 매입
+	}
+	else
+	{
+		GuiControl, , 9,
+	}
+	WatchSourceWasPresent := isPresent
+}
+return
+
+; fb_chittop 에서 현재 거래처(G_NAME)와 100% 일치하는 CT_DATE, CT_NO 목록 조회
+UpdateRecentShipments:
+{
+	global myDB, 거래처
+	Gui, ListView, RecentShipmentsLV
+	LV_Delete()
+	if ( 거래처 = "" )
+	{
+		LV_Add("", "(거래처 없음)", "")
+		return
+	}
+	; SQL injection 방지: 작은따옴표 이스케이프
+	safeName := StrReplace(거래처, "'", "''")
+	myQuery := "SELECT CT_DATE, CT_NO FROM fb_chittop WHERE G_NAME = '" . safeName . "' ORDER BY CT_DATE DESC, CT_NO DESC LIMIT 20;"
+	shipmentResult := dbQuery(myDB, myQuery)
+	if ( errorCheck(shipmentResult) )
+	{
+		LV_Add("", "조회 오류", shipmentResult[3])
+		return
+	}
+	rowCount := 0
+	if ( IsObject(shipmentResult) )
+		rowCount := shipmentResult.MaxIndex()
+	if ( rowCount = "" || rowCount < 1 )
+	{
+		LV_Add("", "(결과 없음)", "거래처=" . 거래처)
+		return
+	}
+	Loop, % rowCount
+	{
+		rawDate := shipmentResult[A_Index][1]
+		; YYYY-MM-DD → MM-DD
+		shortDate := ( StrLen(rawDate) >= 10 ) ? SubStr(rawDate, 6, 5) : rawDate
+		LV_Add("", shortDate, shipmentResult[A_Index][2])
+	}
+	LV_ModifyCol(1, 50)
+	LV_ModifyCol(2, 115)
+}
+return
+
+; ListView 셀 더블클릭 시 해당 셀의 값을 클립보드에 복사
+RecentShipmentsEvent:
+{
+	if ( A_GuiEvent != "DoubleClick" )
+		return
+	Gui, ListView, RecentShipmentsLV
+	row := A_EventInfo
+	if ( row < 1 )
+		return
+	; 마우스 위치에서 클릭한 열 판별
+	MouseGetPos,,,, ctrl
+	LV_GetText(col1, row, 1)
+	LV_GetText(col2, row, 2)
+	; 마우스 X 좌표로 열 판단
+	CoordMode, Mouse, Client
+	MouseGetPos, mx, my
+	CoordMode, Mouse, Screen
+	; 첫 번째 컬럼 너비 90 기준으로 분기
+	GuiControlGet, lvPos, Pos, RecentShipmentsLV
+	relX := mx - lvPosX
+	if ( relX < 90 )
+		Clipboard := col1
+	else
+		Clipboard := col2
+	ToolTip, % "복사됨: " . Clipboard
+	SetTimer, RemoveShipmentTooltip, -1200
+}
+return
+
+RemoveShipmentTooltip:
+ToolTip
+return
 
 
 
