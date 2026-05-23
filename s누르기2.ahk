@@ -1050,6 +1050,55 @@ ControlSetText, Edit7, %내용%, %WINTITLE%
 ControlGetText, 연락처, TRzDBEdit19, ahk_class TfmChitSale
 ControlSetText, Edit8, %연락처%, %WINTITLE%
 }
+else if WinExist("ahk_class TfmChitBuy")
+{
+ControlGetText, 받는분, Edit1, %WINTITLE%
+ControlGetText, 거래처, TRzDBEdit18, ahk_class TfmChitBuy
+ControlSetText, Edit2, %거래처%, %WINTITLE%
+Gosub, UpdateRecentShipments
+ControlGetText, 배송날짜, TRzDBDateTimeEdit1, ahk_class TfmChitBuy
+
+NewStr := RegExReplace(배송날짜, "-" , Replacement := "")
+Number := Abs(NewStr)
+요일 := Get_Weekday(Number, 1)
+if (요일 = "2"){
+	요일 = 월
+}
+else if (요일 = "3"){
+	요일 = 화
+}
+else if (요일 = "4"){
+	요일 = 수
+}
+else if (요일 = "5"){
+	요일 = 목
+}
+else if (요일 = "6"){
+	요일 = 금
+}
+else if (요일 = "7"){
+	요일 = 토
+}
+else if (요일 = "1"){
+	요일 = 일
+}
+else
+{
+}
+
+ControlSetText, Edit3, %배송날짜%`n(%요일%), %WINTITLE%
+
+ControlGetText, 출발시각, TRzDBEdit14, ahk_class TfmChitBuy
+ControlSetText, Edit4, %출발시각%, %WINTITLE%
+ControlGetText, 배송지, TRzDBEdit13, ahk_class TfmChitBuy
+ControlSetText, Edit5, %배송지%, %WINTITLE%
+ControlGetText, 기타메모, TRzDBEdit11, ahk_class TfmChitBuy
+ControlSetText, Edit6, %기타메모%, %WINTITLE%
+ControlGetText, 내용, TDBGridInplaceEdit1, ahk_class TfmChitBuy
+ControlSetText, Edit7, %내용%, %WINTITLE%
+ControlGetText, 연락처, TRzDBEdit19, ahk_class TfmChitBuy
+ControlSetText, Edit8, %연락처%, %WINTITLE%
+}
 else
 {
 ControlGetText, 받는분, Edit1, %WINTITLE%
@@ -2341,588 +2390,246 @@ return
 	}
 
 
-if WinExist("ahk_class TfmEstimate2")
+if WinExist("ahk_class TfmChitBuy")
+{
+	gosub, 캘린더4
+	return
+}
+else if WinExist("ahk_class TfmEstimate2")
 {
 	gosub, 캘린더3
 	return
 }
 else
-
 {
+	; ===== TfmChitSale 매출 → Firebird CHITTOP(매출)/CHIT → tms/tms_list INSERT =====
+	; fr3/Excel export 우회. 실시간 데이터.
 
-
-ControlGetText, 거래처명1, Edit2,  %WINTITLE%
-
-ControlGetText, 출발시각1, Edit4,  %WINTITLE%
-ControlGetText, 배송지1, Edit5,  %WINTITLE%
-ControlGetText, 기타메모1, Edit6,  %WINTITLE%
-ControlGetText, 내용1, Edit7,  %WINTITLE%
-ControlGetText, 전화번호, Edit8, %WINTITLE%
-ControlGetText, 재단여부, ComboBox2, %WINTITLE%
-ControlGetText, 배송자, ComboBox3, %WINTITLE%
-
-
-;~ winkill, ahk_exe hcell.exe
-
-	WinWait, ahk_class TfmChitSale,
-	IfWinNotActive, ahk_class TfmChitSale, , WinActivate, ahk_class TfmChitSale,
-	WinWaitActive, ahk_class TfmChitSale,
-	Sleep, 200
-
-
-;~ Send, {F8}
-ControlClick, TRzBitBtn8, ahk_class TfmChitSale
-
-	WinWait, 인쇄리스트,
-	IfWinNotActive, 인쇄리스트, , WinActivate, 인쇄리스트,
-	WinWaitActive, 인쇄리스트,
-	sleep,500
-
-send, {home}{down 18}{tab 7}{enter}
-Sleep, 200
-
-
-Sleep, 200
-winkill, ahk_exe hcell.exe
-	WinWait, Export to Excel,
-	IfWinNotActive, Export to Excel, , WinActivate, Export to Excel,
-	WinWaitActive, Export to Excel,
-	Sleep, 200
-
-send, {ShiftDown}{Tab}{ShiftUp}{Space}{tab}
-Sleep, 200
-Send, {enter}
-Sleep, 200
-;~ ControlSetText, edit1, %A_MyDocuments%\7_2번째 전표.xls, 다른 이름으로 저장
-
-
-	WinWait, 다른 이름으로 저장,
-	IfWinNotActive, 다른 이름으로 저장, , WinActivate, 다른 이름으로 저장,
-	WinWaitActive, 다른 이름으로 저장,
-
-ControlSetText, edit1, %A_MyDocuments%\7_2번째 전표.xml, 다른 이름으로 저장
-Sleep, 100
-
-Send, {tab 2}{enter}
-
-
-/*
-Sleep, 100
-
-xlCSV = 6
-path := A_MyDocuments . "\7_2번째 전표.xls"
-
-
-run, % path
-
-WinWait, ahk_exe hcell.exe
-	WinWait, 셀,
-	IfWinNotActive, 셀, , WinActivate, 셀,
-	WinWaitActive, 셀,
-
-Send, {enter}
-Sleep, 1000
-
-Send, {AltDown}v{AltUp}
-	WinWait, 다른 이름으로 저장하기,
-	IfWinNotActive, 다른 이름으로 저장하기, , WinActivate, 다른 이름으로 저장하기,
-	WinWaitActive, 다른 이름으로 저장하기,
-Sleep, 100
-Control, choosestring, 엑셀 통합 문서 (*.xlsx), ComboBox2, 다른 이름으로 저장하기
-Sleep, 100
-ControlSetText, ComboBox1, %A_MyDocuments%\7_2번째 전표.xlsx, 다른 이름으로 저장하기
-Sleep, 500
-
-ControlFocus, Button6, 다른 이름으로 저장하기
-/*
-;~ send, {tab 5}{enter}
-ControlClick, Button6, 다른 이름으로 저장하기
-Sleep, 100
-
-	WinWait, 다른 이름으로 저장 확인,
-	IfWinNotActive, 다른 이름으로 저장 확인, , WinActivate, 다른 이름으로 저장 확인,
-	WinWaitActive, 다른 이름으로 저장 확인,
-	Sleep, 100
-Send, {Left}{enter}
-*/
-
-;~ Sleep, 1000
-	;~ winkill, ahk_exe hcell.exe
-	;~ Process, close, EXCEL.EXE
-Sleep, 100
-SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\기록중.mp3
-;~ Sleep, 2000
-
-;~ MsgBox, ?
-
-/*
-XL=
-
-Global XL ; 중요함
-*/
-
-
-
-	Loop, 300  ; 최대 300번 시도 (30초 타임아웃)
+	; 폼 F5 저장 강제 (Firebird commit 대기)
+	ControlSend, , {F5}, ahk_class TfmChitSale
+	Sleep, 500
+	; '재고 확인' 다이얼로그 뜨면 닫힐 때까지 대기 (최대 60초)
+	IfWinExist, 재고 확인
 	{
-		Sleep, 100
-		if FileExist(A_MyDocuments "\7_2번째 전표.xml"){
-			break
-		}else{
-		}
+		WinWaitClose, 재고 확인, , 60
 	}
-	if (A_Index >= 300) {
-		MsgBox, 파일 생성 대기 타임아웃: 7_2번째 전표.xml
+	Sleep, 500
+
+	ControlGetText, 거래처명1, Edit2, %WINTITLE%
+	ControlGetText, 배송날짜1, Edit3, %WINTITLE%
+	ControlGetText, 출발시각1, Edit4, %WINTITLE%
+	ControlGetText, 배송지1, Edit5, %WINTITLE%
+	ControlGetText, 기타메모1, Edit6, %WINTITLE%
+	ControlGetText, 전화번호, Edit8, %WINTITLE%
+	ControlGetText, 재단여부, Edit11, %WINTITLE%
+
+	ControlGetText, ct_date_raw, TRzDBDateTimeEdit1, ahk_class TfmChitSale
+	ControlGetText, ct_time_raw, TRzDBEdit13, ahk_class TfmChitSale
+	ControlGetText, g_name_raw, TRzEdit8, ahk_class TfmChitSale
+
+	if (g_name_raw = "" or ct_date_raw = "")
+	{
+		MsgBox, 16, 캘린더, TfmChitSale 거래처 또는 날짜를 읽지 못했습니다.`n거래처: %g_name_raw%`n날짜: %ct_date_raw%
 		return
 	}
 
-;~ /*
+	fbConn := FbConnect()
+	if (fbConn = "")
+		return
 
-; ;;;;;;; 파이썬 FCM 실행
-EnvSet, PATH, %A_EnvPath%;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\Scripts\
-Run, python "C:\Users\shwoodnew\tms_new\send_custom_fcm.py"
-; ;;;;;;; 파이썬 FCM 실행
+	; G_NAME 정리: 폼이 "(매인)" 같은 부가 표시를 붙임. 끝쪽 "(...)" 제거.
+	g_name_clean := g_name_raw
+	parenPos := InStr(g_name_clean, "(", false, 0)
+	if (parenPos > 0 && (StrLen(g_name_clean) - parenPos) < 8)
+		g_name_clean := SubStr(g_name_clean, 1, parenPos - 1)
+	g_name_clean := Trim(g_name_clean)
+	RegExMatch(ct_date_raw, "\d{4}-\d{2}-\d{2}", ct_date_clean)
+	if (ct_date_clean = "")
+		ct_date_clean := ct_date_raw
 
+	safeName := StrReplace(g_name_clean, "'", "''")
+	sqlCt := "SELECT FIRST 1 CT_PK FROM CHITTOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE '" . safeName . "%' AND CT_DATE = '" . ct_date_clean . "' AND CAST(CT_GUBUN AS VARCHAR(10) CHARACTER SET KSC_5601) = '매출' ORDER BY CT_PK DESC"
 
-run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
-
-;~ */
-
-Sleep, 2000
-;~ path := A_MyDocuments . "\7_2번째 전표.xlsx"
-path := A_MyDocuments . "\7_2번째 전표.xml"
-XL=
-Global XL ; 중요함
-
-XL := ComObjCreate("Excel.Application")
-XL.Workbooks.Open(path, 3, 0)
-XL.Visible := false
-
-;~ SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\1.mp3
-Sleep, 1000
-
-
-XL.ActiveSheet.Range("1:500").select
-XL.selection.Replace("0.00","")
-
-전표번호 := XL.ActiveSheet.Range("B2").value
-총금액 := XL.ActiveSheet.Range("Q4").value
-업체코드 := XL.ActiveSheet.Range("Q6").value
-입금액 := XL.ActiveSheet.Range("J7").value
-;~ MsgBox, % 입금액
-
-XL.ActiveSheet.Range("1:10").Delete
-XL.ActiveSheet.Range("AH:AJ").Delete
-XL.ActiveSheet.Range("AD:AF").Delete
-XL.ActiveSheet.Range("X:AB").Delete
-XL.ActiveSheet.Range("S:V").Delete
-XL.ActiveSheet.Range("N:N").Delete
-XL.ActiveSheet.Range("O:P").Delete
-;~ XL.ActiveSheet.Range("N:N").Delete
-XL.ActiveSheet.Range("L:M").Delete
-XL.ActiveSheet.Range("D:J").Delete
-;~ XL.ActiveSheet.Range("F:F").Delete
-;~ XL.ActiveSheet.Range("A:A").Delete
-;~ XL.ActiveSheet.Range("A:A").Delete
-
-찾는문자 := "    *** 이 하 여 백 ***"
-;~ 시트이름 := XL.Page 1
-범위 := XL.workSheets("page 1").Range("1:500").Find(찾는문자)
-행 := 범위.Row
-;~ 행 := 행 + 1
-XL.ActiveSheet.Range(행 ":500").Delete
-;~ XL.ActiveSheet.Range(행 ":" 열).Value :=     *** 이 하 여 백 ***
-XL.ActiveSheet.Range("D:G").NumberFormat := "@"
-XL.ActiveSheet.Range("B:B").NumberFormat := "@"
-Loop, % 행
-{
-	F값 := XL.ActiveSheet.Range("F" A_Index).value
-	if(F값="2100000000"){
-		XL.ActiveSheet.Range("F" A_Index).value := "0"
+	try
+		rs := fbConn.Execute(sqlCt)
+	catch e
+	{
+		MsgBox, 16, CT_PK 조회 실패, % "SQL:`n" sqlCt "`n`n에러: " e.Message
+		fbConn.Close()
+		return
 	}
-	E값 := XL.ActiveSheet.Range("E" A_Index).value
-	if(E값="0.000000"){
-		XL.ActiveSheet.Range("E" A_Index).value := ""
+
+	if rs.EOF
+	{
+		MsgBox, 16, 캘린더, % "CT_PK를 찾을 수 없습니다.`n거래처: " g_name_raw "`n날짜: " ct_date_raw "`n시간: " ct_time_raw
+		rs.Close()
+		fbConn.Close()
+		return
 	}
-}
-1출발시각 := RegExReplace(출발시각1, "[0-9]" , "")
 
+	ct_pk := rs.Fields("CT_PK").Value
+	총금액 := 0
+	try
+		총금액 := rs.Fields("CT_SALEHAP").Value
+	catch
+		총금액 := 0
+	rs.Close()
 
-if (1출발시각 = "::")
-{
-	RegExMatch(출발시각1, "(.*):(.*):(.*)", 1time)
-	출발시각1 = % 1time1 "시" 1time2 "출"
-}
-else
-{
-}
-
-gui, Submit, nohide
-
-if (ddl = "예림"){
-	도어회사 = 예
+	sqlCt2 := "SELECT CT_SALEHAP, CT_INPAY FROM CHITTOP WHERE CT_PK = " . ct_pk
+	try
+	{
+		rs := fbConn.Execute(sqlCt2)
+		if !rs.EOF
+		{
+			총금액 := rs.Fields("CT_SALEHAP").Value
+			입금액 := rs.Fields("CT_INPAY").Value
+		}
+		rs.Close()
 	}
-else if (ddl = "우딘"){
-	도어회사 = 우
+	catch
+	{
+		총금액 := 0
+		입금액 := 0
 	}
-else if (ddl = "재현"){
-	도어회사 = 재
+
+	if (총금액 = "")
+		총금액 := 0
+	if (입금액 = "")
+		입금액 := 0
+
+	sqlChit := "SELECT C_PK, J_PK, CAST(J_NAME AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_NAME_K, CAST(J_STANDARD AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_STANDARD_K, C_QTY, C_COST, C_NOT, CAST(J_GITA AS VARCHAR(20) CHARACTER SET KSC_5601) AS J_GITA_K, C_NO FROM CHIT WHERE CT_PK = " . ct_pk . " ORDER BY C_NO"
+
+	try
+		rs := fbConn.Execute(sqlChit)
+	catch e
+	{
+		MsgBox, 16, CHIT 조회 실패, % "SQL:`n" sqlChit "`n`n에러: " e.Message
+		fbConn.Close()
+		return
 	}
-else if (ddl = "크로스"){
-	도어회사 = 크
+
+	CONT1 := ""
+	pkList := ""
+	rowCount := 0
+	while !rs.EOF
+	{
+		c_pk := rs.Fields("C_PK").Value
+		j_pk := rs.Fields("J_PK").Value
+		j_name := rs.Fields("J_NAME_K").Value
+		j_standard := rs.Fields("J_STANDARD_K").Value
+		c_qty := rs.Fields("C_QTY").Value
+		c_cost := rs.Fields("C_COST").Value
+		c_not := rs.Fields("C_NOT").Value
+		j_gita := rs.Fields("J_GITA_K").Value
+		c_no := rs.Fields("C_NO").Value
+
+		if (c_qty = "")
+			c_qty := 0
+		if (c_cost = "")
+			c_cost := 0
+		if (c_not = "")
+			c_not := 0
+		if (j_pk = "")
+			j_pk := 0
+		if (c_no = "")
+			c_no := 0
+
+		if (j_gita = "")
+			gitaVal := "NULL"
+		else
+		{
+			j_gita_e := StrReplace(j_gita, "'", "''")
+			j_gita_e := StrReplace(j_gita_e, "(", " ")
+			j_gita_e := StrReplace(j_gita_e, ")", " ")
+			gitaVal := "'" . j_gita_e . "'"
+		}
+
+		nameComb := j_name . " / " . j_standard
+		nameComb := StrReplace(nameComb, "'", "''")
+
+		if (CONT1 != "")
+			CONT1 .= ",`n"
+		CONT1 .= "(" . ct_pk . ", '" . c_pk . "', NULL, '" . nameComb . "', " . c_qty . ", " . c_cost . ", " . c_not . ", " . j_pk . ", " . gitaVal . ", " . c_no . ")"
+		if (pkList != "")
+			pkList .= ","
+		pkList .= "'" . c_pk . "'"
+		rowCount += 1
+
+		rs.MoveNext()
 	}
-else
-{
-	도어회사 =
-}
+	rs.Close()
+	fbConn.Close()
 
-gui, Submit, nohide
-
-if (ddl2 = "컷"){
-	재단여부 = 컷
+	if (CONT1 = "")
+	{
+		MsgBox, 16, 캘린더, % "CHIT 명세 행이 없습니다. CT_PK=" . ct_pk
+		return
 	}
-else
-{
-	재단여부 =
-}
 
-거래처명1 := StrReplace(거래처명1, "주식회사 " , "")
-거래처명1 := StrReplace(거래처명1, "(주)" , "")
-거래처명1 := StrReplace(거래처명1, " 주식회사" , "")
-거래처명1 := StrReplace(거래처명1, "주식회사" , "")
-거래처명1 := StrReplace(거래처명1, "지붕/" , "")
-/*
-파일이름1 := "A" 배송날짜 "_B" 출발시각1 "_C" 거래처명1 "_D" 배송지1 "_E" 기타메모1 "_V" 재단여부 "_G" 도어회사 "_T" 배송자 "_Y"
+	; 배송날짜에 '(요일)' 같이 들어있을 수 있어 YYYY-MM-DD만 추출
+	RegExMatch(배송날짜1, "\d{4}-\d{2}-\d{2}", 배송날짜_only)
+	if (배송날짜_only = "")
+		배송날짜_only := 배송날짜1
 
-;~ StringReplace, 파일이름, %%파일이름%%, ,/'{}[]*&^$#@! , " ",
-파일이름1 := StrReplace(파일이름1, "/" , ",")
-파일이름1 := StrReplace(파일이름1, "\" , ",")
-파일이름1 := StrReplace(파일이름1, ":" , ",")
-파일이름1 := StrReplace(파일이름1, "*" , ",")
-파일이름1 := StrReplace(파일이름1, "?" , ",")
-파일이름1 := StrReplace(파일이름1, "<" , ",")
-파일이름1 := StrReplace(파일이름1, ">" , ",")
-파일이름1 := StrReplace(파일이름1, "|" , ",")
-파일이름1 := StrReplace(파일이름1, "." , ",")
-파일이름1 := StrReplace(파일이름1, "[" , ",")
-파일이름1 := StrReplace(파일이름1, "]" , ",")
-파일이름1 := StrReplace(파일이름1, " " , ",")
+	; 매출↔매입 전환 시 반대 테이블 row가 남지 않도록 양쪽 모두 DELETE
+	dbQuery(myDB, "DELETE FROM tms WHERE ID = '" . ct_pk . "';")
+	dbQuery(myDB, "DELETE FROM tms_2 WHERE ID = '" . ct_pk . "';")
 
-;~ MsgBox, % 파일이름1
-;~ return
-*/
+	배송날짜_safe := StrReplace(배송날짜_only, "'", "''")
+	출발시각1_safe := StrReplace(출발시각1, "'", "''")
+	거래처명1_safe := StrReplace(거래처명1, "'", "''")
+	배송지1_safe := StrReplace(배송지1, "'", "''")
+	기타메모1_safe := StrReplace(기타메모1, "'", "''")
+	재단여부_safe := StrReplace(재단여부, "'", "''")
+	전화번호_safe := StrReplace(전화번호, "'", "''")
 
-;~ MsgBox, %배송날짜%', '%출발시각1%', '%거래처명1%', '매장출고', '%기타메모1%', '%재단여부%', '%도어회사%', '%배송자%', '%전표번호%', '%전화번호%', 'Y', %총금액%, %입금액%, %업체코드%
+	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", NULL, NULL, NULL);"
+	result := dbQuery(myDB, myQuery)
+	if(errorCheck(result)){
+		MsgBox, % "tms INSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
+		return
+	}
 
+	; ===== tms_list UPSERT: 기존 행은 UPDATE(수량 같으면 출 보존, 다르면 NULL), 신규 행은 INSERT =====
+	myQuery := "INSERT INTO tms_list (ID, pk, 출, 내용, 수량, 단가, 공급대가, pdt_code, 비고, no) VALUES`n" . CONT1 . "`nON DUPLICATE KEY UPDATE`n  내용 = VALUES(내용),`n  단가 = VALUES(단가),`n  공급대가 = VALUES(공급대가),`n  pdt_code = VALUES(pdt_code),`n  비고 = VALUES(비고),`n  no = VALUES(no),`n  출 = CASE WHEN tms_list.수량 != VALUES(수량) THEN NULL ELSE tms_list.출 END,`n  수량 = VALUES(수량);"
+	result := dbQuery(myDB, myQuery)
+	if(errorCheck(result)){
+		MsgBox, % "tms_list UPSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
+		return
+	}
 
+	; Firebird에서 사라진 옛 pk row 정리
+	myQuery := "DELETE FROM tms_list WHERE ID = '" . ct_pk . "' AND pk NOT IN (" . pkList . ");"
+	result := dbQuery(myDB, myQuery)
+	if(errorCheck(result)){
+		MsgBox, % "tms_list cleanup ErrorCode: " result[2] ", Error : " result[3]
+	}
 
-CONT1=
-CONT=
+	; 진단 코드 (주석처리) — 필요 시 ; 제거하여 활성화
+	; verifyTms := dbQuery(myDB, "SELECT COUNT(*) FROM tms WHERE ID = '" . ct_pk . "';")
+	; verifyList := dbQuery(myDB, "SELECT COUNT(*) FROM tms_list WHERE ID = '" . ct_pk . "';")
+	; tmsCnt := IsObject(verifyTms) ? verifyTms[1][1] : "?"
+	; listCnt := IsObject(verifyList) ? verifyList[1][1] : "?"
+	; charsetChk := dbQuery(myDB, "SHOW VARIABLES LIKE 'character_set_client';")
+	; csVal := IsObject(charsetChk) ? charsetChk[1][2] : "?"
 
+	run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
 
+	SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\F1.mp3
+	Sleep, 100
 
-; 1-1단계: 삭제 전에 값을 먼저 조회해서 변수에 저장
-selectQuery =
-(
-SELECT image, order_image FROM tms WHERE ID = '%전표번호%';
-)
-selectResult := dbQuery(myDB, selectQuery)
-if(errorCheck(selectResult)){
-    MsgBox, % "조회 ErrorCode: " selectResult[2] ", Error : " selectResult[3]
-    return
-}
-
-; 조회된 값을 변수에 저장 (dbQuery는 2차원 배열 반환: selectResult[행번호][컬럼번호])
-if(selectResult != "" && selectResult.MaxIndex() >= 1){
-    image := selectResult[1][1]           ; 첫번째 행, 첫번째 컬럼 (image)
-    order_image := selectResult[1][2]     ; 첫번째 행, 두번째 컬럼 (order_image)
-
-    ; ★ 수정: 명시적 문자열 연결 연산자 . 사용
-    if (image != "" && image != "NULL") {
-        imageValue := "'" . image . "'"
-    } else {
-        imageValue := "NULL"
-    }
-
-    if (order_image != "" && order_image != "NULL") {
-        order_imageValue := "'" . order_image . "'"
-    } else {
-        order_imageValue := "NULL"
-    }
-
-    ; 디버깅용 - 실제 값 확인
-    ;~ MsgBox, % "image 원본: [" . image . "]`norder_image 원본: [" . order_image . "]`n`nimageValue: " . imageValue . "`norder_imageValue: " . order_imageValue
-} else {
-    ; 조회 결과가 없으면 NULL로 설정
-    imageValue := "NULL"
-    order_imageValue := "NULL"
-}
-
-; 1-2단계: DELETE 실행
-deleteQuery =
-(
-DELETE FROM tms WHERE ID = '%전표번호%';
-)
-result := dbQuery(myDB, deleteQuery)
-if(errorCheck(result)){
-    MsgBox, % "tms 삭제 ErrorCode: " result[2] ", Error : " result[3]
-}
-
-; 2단계: 새로운 데이터 삽입 (★ %imageValue%, %order_imageValue% 사용)
-myQuery =
-(
-INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image)
-VALUES ('%배송날짜%', '%출발시각1%', '%거래처명1%', '%배송지1%', '%기타메모1%', '%재단여부%', '%도어회사%', '%배송자%', '%전표번호%', '%전화번호%', 'Y', %총금액%, %입금액%, %업체코드%, %imageValue%, %order_imageValue%);
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "2_2 ErrorCode: " result[2] ", Error : " result[3]
-}
-
-;~ MsgBox, 끝
-CONT1=
-CONT=
-
-
-; 0단계: 기존 임시 테이블 삭제
-myQuery =
-(
-DROP TEMPORARY TABLE IF EXISTS temp_new_data;
-)
-result := dbQuery(myDB, myQuery)
-
-; 1단계: 원본 테이블 구조로 임시 테이블 생성
-myQuery =
-(
-CREATE TEMPORARY TABLE temp_new_data LIKE tms_list;
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "임시 테이블 생성 ErrorCode: " result[2] ", Error : " result[3]
-    return
-}
-
-; 2단계: 엑셀 데이터 읽기 및 임시 테이블에 삽입
-행마1 := 행 - 1
-행마2 := 행 - 2
-
-if(행마2!=0){
-    Loop, % 행마2
-    {
-        pk := XL.ActiveSheet.Range("B" A_index).value
-        if(pk=""){
-            pk := "NULL"
-        }else{
-            pk := "'" pk "'"
-        }
-
-        내용 := XL.ActiveSheet.Range("C" A_index).value
-        if(내용=""){
-            내용 := "NULL"
-        }else{
-            내용 := "'" StrReplace(내용, "'", "''") "'"
-        }
-
-        수량 := XL.ActiveSheet.Range("D" A_index).value
-        수량 := RemoveDecimal(수량)
-        if(수량=""){
-            수량 := 0
-        }
-
-        단가 := XL.ActiveSheet.Range("E" A_index).value
-        단가 := RemoveDecimal(단가)
-        if(단가=""){
-            단가 := "NULL"
-        }
-
-        공급대가 := XL.ActiveSheet.Range("I" A_index).value
-        공급대가 := RemoveDecimal(공급대가)
-        if(공급대가=""){
-            공급대가 := "NULL"
-        }
-
-        pdtcode := XL.ActiveSheet.Range("G" A_index).value
-        pdtcode := RemoveDecimal(pdtcode)
-        if(pdtcode="2100000000"){
-            pdtcode := 0
-        }
-
-        비고 := XL.ActiveSheet.Range("F" A_index).value
-        if(비고=""){
-            비고 := "NULL"
-        }else{
-            비고 := "'" StrReplace(비고, "'", "''") "'"
-        }
-
-        no := XL.ActiveSheet.Range("H" A_index).value
-
-        CONT := "(" 전표번호 ", " pk ", NULL, " 내용 ", " 수량 ", " 단가 ", " 공급대가 ", " pdtcode ", " 비고 ", " no "),`n"
-        CONT1 .= CONT
-
-        if(행마2 = A_Index){
-            break
-        }
-    }
-}
-
-; 마지막 행 추가
-pk := XL.ActiveSheet.Range("B" 행마1).value
-if(pk=""){
-    pk := "NULL"
-}else{
-    pk := "'" pk "'"
-}
-
-내용 := XL.ActiveSheet.Range("C" 행마1).value
-if(내용=""){
-    내용 := "NULL"
-}else{
-    내용 := "'" StrReplace(내용, "'", "''") "'"
-}
-
-수량 := XL.ActiveSheet.Range("D" 행마1).value
-수량 := RemoveDecimal(수량)
-if(수량=""){
-    수량 := 0
-}
-
-단가 := XL.ActiveSheet.Range("E" 행마1).value
-단가 := RemoveDecimal(단가)
-if(단가=""){
-    단가 := "NULL"
-}
-
-공급대가 := XL.ActiveSheet.Range("I" 행마1).value
-공급대가 := RemoveDecimal(공급대가)
-if(공급대가=""){
-    공급대가 := "NULL"
-}
-
-pdtcode := XL.ActiveSheet.Range("G" 행마1).value
-pdtcode := RemoveDecimal(pdtcode)
-if(pdtcode="2100000000"){
-    pdtcode := 0
-}
-
-비고 := XL.ActiveSheet.Range("F" 행마1).value
-if(비고=""){
-    비고 := "NULL"
-}else{
-    비고 := "'" StrReplace(비고, "'", "''") "'"
-}
-
-no := XL.ActiveSheet.Range("H" 행마1).value
-
-CONT := "(" 전표번호 ", " pk ", NULL, " 내용 ", " 수량 ", " 단가 ", " 공급대가 ", " pdtcode ", " 비고 ", " no ")"
-CONT1 .= CONT
-
-; 3단계: 임시 테이블에 새 데이터 삽입
-myQuery =
-(
-INSERT INTO temp_new_data (ID, pk, 출, 내용, 수량, 단가, 공급대가, pdt_code, 비고, no)
-VALUES
-%CONT1%
-;
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "임시 테이블 삽입 ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
-    return
-}
-
-; 4단계: '출' 값 복사 - 수량도 동일해야 함!
-myQuery =
-(
-UPDATE temp_new_data t
-SET t.출 = (
-    SELECT o.출
-    FROM tms_list o
-    WHERE o.ID = t.ID
-        AND o.내용 = t.내용
-        AND o.수량 = t.수량
-        AND o.pdt_code = t.pdt_code
-        AND COALESCE(o.비고, '') = COALESCE(t.비고, '')
-        AND o.출 IS NOT NULL
-    ORDER BY ABS(o.no - t.no), o.no
-    LIMIT 1 );
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "'출' 값 복사 ErrorCode: " result[2] ", Error : " result[3]
-    return
-}
-
-; 5단계: 해당 ID의 모든 기존 데이터 삭제
-myQuery =
-(
-DELETE FROM tms_list WHERE ID = '%전표번호%';
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "기존 데이터 삭제 ErrorCode: " result[2] ", Error : " result[3]
-    return
-}
-
-; 6단계: 임시 테이블의 모든 데이터를 원본 테이블에 삽입
-myQuery =
-(
-INSERT INTO tms_list (ID, pk, 출, 내용, 수량, 단가, 공급대가, pdt_code, 비고, no)
-SELECT ID, pk, 출, 내용, 수량, 단가, 공급대가, pdt_code, 비고, no
-FROM temp_new_data;
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "데이터 삽입 ErrorCode: " result[2] ", Error : " result[3]
-    return
-}
-
-; 7단계: 임시 테이블 삭제
-myQuery =
-(
-DROP TEMPORARY TABLE IF EXISTS temp_new_data;
-)
-result := dbQuery(myDB, myQuery)
-
-;~ MsgBox, % "데이터 처리 완료!"
-
-
-;~ XL.ActiveWorkbook.Save()
-wb := ""
-ws := ""
-XL.ActiveWorkbook.Close(0)
-XL.Quit()
-XL := ""
-	/*
-	ControlClick TRzListBox1, 인쇄리스트, , ,, x189 y281 ; 연습 4
-ControlClick, TRzBitBtn1, 인쇄리스트
-*/
-
-Sleep, 100
-
-
-;~ MsgBox, , ,적성완료, 0.8
-;~ Sleep, 800
-
-;~ Sleep, 1000
-	;~ winkill, ahk_exe hcell.exe
-	;~ Process, close, EXCEL.EXE
-Sleep, 100
-
-
-
-Sleep, 100
-
-
+	; INSERT 검증
+	verifyTms := dbQuery(myDB, "SELECT COUNT(*) FROM tms WHERE ID = '" . ct_pk . "';")
+	verifyTms2 := dbQuery(myDB, "SELECT COUNT(*) FROM tms_2 WHERE ID = '" . ct_pk . "';")
+	verifyList := dbQuery(myDB, "SELECT COUNT(*) FROM tms_list WHERE ID = '" . ct_pk . "';")
+	tmsCnt := IsObject(verifyTms) ? verifyTms[1][1] : "?"
+	tms2Cnt := IsObject(verifyTms2) ? verifyTms2[1][1] : "?"
+	listCnt := IsObject(verifyList) ? verifyList[1][1] : "?"
+	MsgBox, 64, 캘린더 (매출) 완료, % "CT_PK = " ct_pk "`n예상: " rowCount " 행`ntms: " tmsCnt " / tms_2: " tms2Cnt " / tms_list: " listCnt, 3
 
 }
 }
 return
-
-
-; 숫자를 정수로 변환하는 함수
-RemoveDecimal(Number) {
-    return Floor(Number)
-}
 
 
 Pause::
@@ -2941,7 +2648,7 @@ return
 WatchSourceWindows:
 {
 	global WatchSourceWasPresent, 상태
-	isPresent := ( WinExist("ahk_class TfmChitSale") or WinExist("ahk_class TfmEstimate2") )
+	isPresent := ( WinExist("ahk_class TfmChitSale") or WinExist("ahk_class TfmEstimate2") or WinExist("ahk_class TfmChitBuy") )
 	if ( WatchSourceWasPresent && !isPresent )
 	{
 		GuiControl, , 1,
@@ -2972,7 +2679,7 @@ WatchSourceWindows:
 		상태 := "매출"
 		GuiControl, , 9, 매출
 	}
-	else if ( WinExist("ahk_class TfmEstimate2") )
+	else if ( WinExist("ahk_class TfmEstimate2") or WinExist("ahk_class TfmChitBuy") )
 	{
 		상태 := "매입"
 		GuiControl, , 9, 매입
@@ -2988,7 +2695,7 @@ return
 ; fb_chittop 에서 현재 거래처(G_NAME)와 100% 일치하는 CT_DATE, CT_NO 목록 조회
 UpdateRecentShipments:
 {
-	global myDB, 거래처
+	global myDB, 거래처, host, user, pw, database
 	Gui, ListView, RecentShipmentsLV
 	LV_Delete()
 	if ( 거래처 = "" )
@@ -3002,8 +2709,35 @@ UpdateRecentShipments:
 	shipmentResult := dbQuery(myDB, myQuery)
 	if ( errorCheck(shipmentResult) )
 	{
-		LV_Add("", "조회 오류", shipmentResult[3])
-		return
+		errMsg := shipmentResult[3]
+		; 연결 끊김 패턴이면 자동 재연결 후 1회 재시도
+		isLost := InStr(errMsg, "Lost connection") || InStr(errMsg, "gone away") || InStr(errMsg, "server has gone") || InStr(errMsg, "Can't connect") || InStr(errMsg, "no connection") || (shipmentResult[2] = 2006) || (shipmentResult[2] = 2013) || (shipmentResult[2] = 2002)
+		if ( isLost )
+		{
+			try dbDisConnect(myDB)
+			myDB := dbConnect(host, user, pw, database)
+			if ( myDB != "error" )
+			{
+				dbQuery(myDB, "set character set euckr")
+				shipmentResult := dbQuery(myDB, myQuery)
+				if ( errorCheck(shipmentResult) )
+				{
+					LV_Add("", "재연결후 오류", shipmentResult[3])
+					return
+				}
+				; 재시도 성공 → 아래 정상 처리로 fall-through
+			}
+			else
+			{
+				LV_Add("", "재연결 실패", errMsg)
+				return
+			}
+		}
+		else
+		{
+			LV_Add("", "조회 오류", errMsg)
+			return
+		}
 	}
 	rowCount := 0
 	if ( IsObject(shipmentResult) )
@@ -3058,531 +2792,227 @@ RemoveShipmentTooltip:
 ToolTip
 return
 
+RemoveCalToolTip:
+ToolTip
+return
+
 
 
 !+6::
 캘린더2:
 {
-		a=0
-	Loop, 30  ; 최대 30번 시도 (3초 타임아웃)
+	; ===== 캘린더2 — TfmChitSale 매출 → Firebird CHITTOP(매출)/CHIT → tms/tms_list INSERT =====
+	; 캘린더와 동일 패턴. 핀해서 같이 쓸 가능성 때문에 별도 라벨 유지.
+
+	; 폼 F5 저장 강제 (Firebird commit 대기)
+	ControlSend, , {F5}, ahk_class TfmChitSale
+	Sleep, 500
+	; '재고 확인' 다이얼로그 뜨면 닫힐 때까지 대기 (최대 60초)
+	IfWinExist, 재고 확인
 	{
-		a++
-		Sleep, 100
-		if FileExist(A_MyDocuments "\7_2번째 전표.xml"){
-		FileDelete, %A_MyDocuments%\7_2번째 전표.xml
-		}else{
-			break
-		}
-		Sleep, 100
-
-		if(a>=10)
-		{
-			Process, close, EXCEL.EXE
-			winkill, ahk_class XLMAIN
-			WinKill, ahk_exe EXCEL.EXE
-		}
-
-
-
+		WinWaitClose, 재고 확인, , 60
 	}
+	Sleep, 500
 
+	ControlGetText, 거래처명1, Edit2, %WINTITLE%
+	ControlGetText, 배송날짜1, Edit3, %WINTITLE%
+	ControlGetText, 출발시각1, Edit4, %WINTITLE%
+	ControlGetText, 배송지1, Edit5, %WINTITLE%
+	ControlGetText, 기타메모1, Edit6, %WINTITLE%
+	ControlGetText, 전화번호, Edit8, %WINTITLE%
+	ControlGetText, 재단여부, Edit11, %WINTITLE%
 
-ControlGetText, 거래처명1, Edit2,  %WINTITLE%
-;~ ControlGetText, 배송날짜1, Edit3,  %WINTITLE%
-ControlGetText, 출발시각1, Edit4,  %WINTITLE%
-ControlGetText, 배송지1, Edit5,  %WINTITLE%
-ControlGetText, 기타메모1, Edit6,  %WINTITLE%
-ControlGetText, 내용1, Edit7,  %WINTITLE%
-ControlGetText, 전화번호, Edit8, %WINTITLE%
-ControlGetText, 재단여부, ComboBox2, %WINTITLE%
+	ControlGetText, ct_date_raw, TRzDBDateTimeEdit1, ahk_class TfmChitSale
+	ControlGetText, ct_time_raw, TRzDBEdit13, ahk_class TfmChitSale
+	ControlGetText, g_name_raw, TRzEdit8, ahk_class TfmChitSale
 
-ControlGetText, 배송자, ComboBox3, %WINTITLE%
-
-;~ winkill, ahk_exe hcell.exe
-
-
-	WinWait, ahk_class TfmChitSale,
-	IfWinNotActive, ahk_class TfmChitSale, , WinActivate, ahk_class TfmChitSale,
-	WinWaitActive, ahk_class TfmChitSale,
-	Sleep, 200
-
-
-;~ Send, {F8}
-ControlClick, TRzBitBtn8, ahk_class TfmChitSale
-
-	WinWait, 인쇄리스트,
-	IfWinNotActive, 인쇄리스트, , WinActivate, 인쇄리스트,
-	WinWaitActive, 인쇄리스트,
-	sleep,500
-
-send, {home}{down 18}{tab 7}{enter}
-Sleep, 200
-
-
-Sleep, 200
-winkill, ahk_exe hcell.exe
-	WinWait, Export to Excel,
-	IfWinNotActive, Export to Excel, , WinActivate, Export to Excel,
-	WinWaitActive, Export to Excel,
-	Sleep, 200
-
-send, {ShiftDown}{Tab}{ShiftUp}{Space}{tab}
-Sleep, 200
-Send, {enter}
-Sleep, 200
-;~ ControlSetText, edit1, %A_MyDocuments%\7_2번째 전표.xls, 다른 이름으로 저장
-
-
-	WinWait, 다른 이름으로 저장,
-	IfWinNotActive, 다른 이름으로 저장, , WinActivate, 다른 이름으로 저장,
-	WinWaitActive, 다른 이름으로 저장,
-
-ControlSetText, edit1, %A_MyDocuments%\7_2번째 전표.xml, 다른 이름으로 저장
-Sleep, 100
-
-Send, {tab 2}{enter}
-
-
-Sleep, 100
-;~ SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\기록중.mp3
-
-
-
-	Loop, 300  ; 최대 300번 시도 (30초 타임아웃)
+	if (g_name_raw = "" or ct_date_raw = "")
 	{
-		Sleep, 100
-		if FileExist(A_MyDocuments "\7_2번째 전표.xml"){
-			break
-		}else{
-		}
-	}
-	if (A_Index >= 300) {
-		MsgBox, 파일 생성 대기 타임아웃: 7_2번째 전표.xml
+		MsgBox, 16, 캘린더2, TfmChitSale 거래처 또는 날짜를 읽지 못했습니다.`n거래처: %g_name_raw%`n날짜: %ct_date_raw%
 		return
 	}
 
+	fbConn := FbConnect()
+	if (fbConn = "")
+		return
 
+	; G_NAME 정리: 폼이 "(매인)" 같은 부가 표시를 붙임. 끝쪽 "(...)" 제거.
+	g_name_clean := g_name_raw
+	parenPos := InStr(g_name_clean, "(", false, 0)
+	if (parenPos > 0 && (StrLen(g_name_clean) - parenPos) < 8)
+		g_name_clean := SubStr(g_name_clean, 1, parenPos - 1)
+	g_name_clean := Trim(g_name_clean)
+	RegExMatch(ct_date_raw, "\d{4}-\d{2}-\d{2}", ct_date_clean)
+	if (ct_date_clean = "")
+		ct_date_clean := ct_date_raw
 
-; ;;;;;;; 파이썬 FCM 실행
-EnvSet, PATH, %A_EnvPath%;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\Scripts\
-Run, python "C:\Users\shwoodnew\tms_new\send_custom_fcm.py"
-; ;;;;;;; 파이썬 FCM 실행
+	safeName := StrReplace(g_name_clean, "'", "''")
+	sqlCt := "SELECT FIRST 1 CT_PK FROM CHITTOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE '" . safeName . "%' AND CT_DATE = '" . ct_date_clean . "' AND CAST(CT_GUBUN AS VARCHAR(10) CHARACTER SET KSC_5601) = '매출' ORDER BY CT_PK DESC"
 
-
-run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
-Sleep, 2000
-;~ path := A_MyDocuments . "\7_2번째 전표.xlsx"
-path := A_MyDocuments . "\7_2번째 전표.xml"
-
-Global XL ; 중요함
-
-XL := ComObjCreate("Excel.Application")
-XL.Workbooks.Open(path, 3, 0)
-XL.Visible := false
-
-
-
-;~ SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\1.mp3
-Sleep, 1000
-
-XL.ActiveSheet.Range("1:500").select
-XL.selection.Replace("0.00","")
-
-전표번호 := XL.ActiveSheet.Range("B2").value
-총금액 := XL.ActiveSheet.Range("Q4").value
-업체코드 := XL.ActiveSheet.Range("Q6").value
-입금액 := XL.ActiveSheet.Range("J7").value
-;~ MsgBox, % 입금액
-XL.ActiveSheet.Range("1:10").Delete
-XL.ActiveSheet.Range("AH:AJ").Delete
-XL.ActiveSheet.Range("AD:AF").Delete
-XL.ActiveSheet.Range("X:AB").Delete
-XL.ActiveSheet.Range("S:V").Delete
-XL.ActiveSheet.Range("N:N").Delete
-XL.ActiveSheet.Range("O:P").Delete
-;~ XL.ActiveSheet.Range("N:N").Delete
-XL.ActiveSheet.Range("L:M").Delete
-XL.ActiveSheet.Range("D:J").Delete
-;~ XL.ActiveSheet.Range("F:F").Delete
-;~ XL.ActiveSheet.Range("A:A").Delete
-
-찾는문자 := "    *** 이 하 여 백 ***"
-;~ 시트이름 := XL.Page 1
-범위 := XL.workSheets("page 1").Range("1:500").Find(찾는문자)
-행 := 범위.Row
-;~ 행 := 행 + 1
-XL.ActiveSheet.Range(행 ":500").Delete
-;~ XL.ActiveSheet.Range(행 ":" 열).Value :=     *** 이 하 여 백 ***
-XL.ActiveSheet.Range("D:G").NumberFormat := "@"
-XL.ActiveSheet.Range("B:B").NumberFormat := "@"
-Loop, % 행
-{
-	F값 := XL.ActiveSheet.Range("F" A_Index).value
-	if(F값="2100000000"){
-		XL.ActiveSheet.Range("F" A_Index).value := "0"
+	try
+		rs := fbConn.Execute(sqlCt)
+	catch e
+	{
+		MsgBox, 16, CT_PK 조회 실패, % "SQL:`n" sqlCt "`n`n에러: " e.Message
+		fbConn.Close()
+		return
 	}
-	E값 := XL.ActiveSheet.Range("E" A_Index).value
-	if(E값="0.000000"){
-		XL.ActiveSheet.Range("E" A_Index).value := ""
+
+	if rs.EOF
+	{
+		MsgBox, 16, 캘린더2, % "CT_PK를 찾을 수 없습니다.`n거래처: " g_name_raw "`n날짜: " ct_date_raw "`n시간: " ct_time_raw
+		rs.Close()
+		fbConn.Close()
+		return
 	}
-}
-1출발시각 := RegExReplace(출발시각1, "[0-9]" , "")
 
+	ct_pk := rs.Fields("CT_PK").Value
+	rs.Close()
 
-
-if (1출발시각 = "::")
-{
-	RegExMatch(출발시각1, "(.*):(.*):(.*)", 1time)
-	출발시각1 = % 1time1 "시" 1time2 "출"
-}
-else
-{
-}
-
-gui, Submit, nohide
-
-if (ddl = "예림"){
-	도어회사 = 예
+	총금액 := 0
+	입금액 := 0
+	sqlCt2 := "SELECT CT_SALEHAP, CT_INPAY FROM CHITTOP WHERE CT_PK = " . ct_pk
+	try
+	{
+		rs := fbConn.Execute(sqlCt2)
+		if !rs.EOF
+		{
+			총금액 := rs.Fields("CT_SALEHAP").Value
+			입금액 := rs.Fields("CT_INPAY").Value
+		}
+		rs.Close()
 	}
-else if (ddl = "우딘"){
-	도어회사 = 우
+	catch
+	{
+		총금액 := 0
+		입금액 := 0
 	}
-else if (ddl = "재현"){
-	도어회사 = 재
+
+	if (총금액 = "")
+		총금액 := 0
+	if (입금액 = "")
+		입금액 := 0
+
+	sqlChit := "SELECT C_PK, J_PK, CAST(J_NAME AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_NAME_K, CAST(J_STANDARD AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_STANDARD_K, C_QTY, C_COST, C_NOT, CAST(J_GITA AS VARCHAR(20) CHARACTER SET KSC_5601) AS J_GITA_K, C_NO FROM CHIT WHERE CT_PK = " . ct_pk . " ORDER BY C_NO"
+
+	try
+		rs := fbConn.Execute(sqlChit)
+	catch e
+	{
+		MsgBox, 16, CHIT 조회 실패, % "SQL:`n" sqlChit "`n`n에러: " e.Message
+		fbConn.Close()
+		return
 	}
-else if (ddl = "크로스"){
-	도어회사 = 크
+
+	CONT1 := ""
+	pkList := ""
+	rowCount := 0
+	while !rs.EOF
+	{
+		c_pk := rs.Fields("C_PK").Value
+		j_pk := rs.Fields("J_PK").Value
+		j_name := rs.Fields("J_NAME_K").Value
+		j_standard := rs.Fields("J_STANDARD_K").Value
+		c_qty := rs.Fields("C_QTY").Value
+		c_cost := rs.Fields("C_COST").Value
+		c_not := rs.Fields("C_NOT").Value
+		j_gita := rs.Fields("J_GITA_K").Value
+		c_no := rs.Fields("C_NO").Value
+
+		if (c_qty = "")
+			c_qty := 0
+		if (c_cost = "")
+			c_cost := 0
+		if (c_not = "")
+			c_not := 0
+		if (j_pk = "")
+			j_pk := 0
+		if (c_no = "")
+			c_no := 0
+
+		if (j_gita = "")
+			gitaVal := "NULL"
+		else
+		{
+			j_gita_e := StrReplace(j_gita, "'", "''")
+			j_gita_e := StrReplace(j_gita_e, "(", " ")
+			j_gita_e := StrReplace(j_gita_e, ")", " ")
+			gitaVal := "'" . j_gita_e . "'"
+		}
+
+		nameComb := j_name . " / " . j_standard
+		nameComb := StrReplace(nameComb, "'", "''")
+
+		if (CONT1 != "")
+			CONT1 .= ",`n"
+		CONT1 .= "(" . ct_pk . ", '" . c_pk . "', NULL, '" . nameComb . "', " . c_qty . ", " . c_cost . ", " . c_not . ", " . j_pk . ", " . gitaVal . ", " . c_no . ")"
+		if (pkList != "")
+			pkList .= ","
+		pkList .= "'" . c_pk . "'"
+		rowCount += 1
+
+		rs.MoveNext()
 	}
-else
-{
-	도어회사 =
-}
+	rs.Close()
+	fbConn.Close()
 
-
-gui, Submit, nohide
-
-if (ddl2 = "컷"){
-	재단여부 = 컷
+	if (CONT1 = "")
+	{
+		MsgBox, 16, 캘린더2, % "CHIT 명세 행이 없습니다. CT_PK=" . ct_pk
+		return
 	}
-else
-{
-	재단여부 =
-}
 
-거래처명1 := StrReplace(거래처명1, "주식회사 " , "")
-거래처명1 := StrReplace(거래처명1, "(주)" , "")
-거래처명1 := StrReplace(거래처명1, " 주식회사" , "")
-거래처명1 := StrReplace(거래처명1, "주식회사" , "")
-거래처명1 := StrReplace(거래처명1, "지붕/" , "")
+	RegExMatch(배송날짜1, "\d{4}-\d{2}-\d{2}", 배송날짜_only)
+	if (배송날짜_only = "")
+		배송날짜_only := 배송날짜1
 
-/*
-파일이름1 := "A" 배송날짜 "_B" 출발시각1 "_C" 거래처명1 "_D" 배송지1 "_E" 기타메모1 "_V" 재단여부 "_G" 도어회사 "_T" 배송자 "_Y"
+	; 매출↔매입 전환 시 반대 테이블 row가 남지 않도록 양쪽 모두 DELETE
+	dbQuery(myDB, "DELETE FROM tms WHERE ID = '" . ct_pk . "';")
+	dbQuery(myDB, "DELETE FROM tms_2 WHERE ID = '" . ct_pk . "';")
 
-;~ StringReplace, 파일이름, %%파일이름%%, ,/'{}[]*&^$#@! , " ",
+	배송날짜_safe := StrReplace(배송날짜_only, "'", "''")
+	출발시각1_safe := StrReplace(출발시각1, "'", "''")
+	거래처명1_safe := StrReplace(거래처명1, "'", "''")
+	배송지1_safe := StrReplace(배송지1, "'", "''")
+	기타메모1_safe := StrReplace(기타메모1, "'", "''")
+	재단여부_safe := StrReplace(재단여부, "'", "''")
+	전화번호_safe := StrReplace(전화번호, "'", "''")
 
-파일이름1 := StrReplace(파일이름1, "/" , ",")
-파일이름1 := StrReplace(파일이름1, "\" , ",")
-파일이름1 := StrReplace(파일이름1, ":" , ",")
-파일이름1 := StrReplace(파일이름1, "*" , ",")
-파일이름1 := StrReplace(파일이름1, "?" , ",")
-파일이름1 := StrReplace(파일이름1, "<" , ",")
-파일이름1 := StrReplace(파일이름1, ">" , ",")
-파일이름1 := StrReplace(파일이름1, "[" , ",")
-파일이름1 := StrReplace(파일이름1, "]" , ",")kk
-파일이름1 := StrReplace(파일이름1, "|" , ",")
-파일이름1 := StrReplace(파일이름1, "." , ",")
-파일이름1 := StrReplace(파일이름1, " " , ",")
-*/
+	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", NULL, NULL, NULL);"
+	result := dbQuery(myDB, myQuery)
+	if(errorCheck(result)){
+		MsgBox, % "tms INSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
+		return
+	}
 
+	; ===== tms_list UPSERT: 기존 행은 UPDATE(수량 같으면 출 보존, 다르면 NULL), 신규 행은 INSERT =====
+	myQuery := "INSERT INTO tms_list (ID, pk, 출, 내용, 수량, 단가, 공급대가, pdt_code, 비고, no) VALUES`n" . CONT1 . "`nON DUPLICATE KEY UPDATE`n  내용 = VALUES(내용),`n  단가 = VALUES(단가),`n  공급대가 = VALUES(공급대가),`n  pdt_code = VALUES(pdt_code),`n  비고 = VALUES(비고),`n  no = VALUES(no),`n  출 = CASE WHEN tms_list.수량 != VALUES(수량) THEN NULL ELSE tms_list.출 END,`n  수량 = VALUES(수량);"
+	result := dbQuery(myDB, myQuery)
+	if(errorCheck(result)){
+		MsgBox, % "tms_list UPSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
+		return
+	}
 
+	myQuery := "DELETE FROM tms_list WHERE ID = '" . ct_pk . "' AND pk NOT IN (" . pkList . ");"
+	result := dbQuery(myDB, myQuery)
+	if(errorCheck(result)){
+		MsgBox, % "tms_list cleanup ErrorCode: " result[2] ", Error : " result[3]
+	}
 
-;~ MsgBox, '%배송날짜%', '%출발시각1%', '%거래처명1%', '%배송지1%', '%기타메모1%', '%재단여부%', '%도어회사%', '%배송자%', '%전표번호%', '%전화번호%', 'Y', %총금액%, %입금액%, %업체코드%
+	run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
 
+	SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\F1.mp3
+	Sleep, 100
 
+	verifyTms := dbQuery(myDB, "SELECT COUNT(*) FROM tms WHERE ID = '" . ct_pk . "';")
+	verifyTms2 := dbQuery(myDB, "SELECT COUNT(*) FROM tms_2 WHERE ID = '" . ct_pk . "';")
+	verifyList := dbQuery(myDB, "SELECT COUNT(*) FROM tms_list WHERE ID = '" . ct_pk . "';")
+	tmsCnt := IsObject(verifyTms) ? verifyTms[1][1] : "?"
+	tms2Cnt := IsObject(verifyTms2) ? verifyTms2[1][1] : "?"
+	listCnt := IsObject(verifyList) ? verifyList[1][1] : "?"
+	MsgBox, 64, 캘린더2 (매출) 완료, % "CT_PK = " ct_pk "`n예상: " rowCount " 행`ntms: " tmsCnt " / tms_2: " tms2Cnt " / tms_list: " listCnt, 3
 
-
-CONT1=
-CONT=
-
-; DELETE 전에 기존 image, order_image 값 조회
-saved_image_detail := ""
-saved_order_image_detail := ""
-myQuery_backup_detail =
-(
-SELECT image, order_image FROM tms WHERE ID = '%전표번호%';
-)
-result_backup_detail := dbQuery(myDB, myQuery_backup_detail)
-if(!errorCheck(result_backup_detail)){
-    if(result_backup_detail.MaxIndex() >= 1){
-        saved_image_detail := result_backup_detail[1][1]
-        saved_order_image_detail := result_backup_detail[1][2]
-    }
-}
-
-myQuery =
-(
-DELETE FROM tms WHERE ID = '%전표번호%';
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "tms 삭제 ErrorCode: " result[2] ", Error : " result[3]
-}
-
-; image, order_image SQL 값 처리
-if(saved_image_detail = ""){
-    saved_image_detail_sql := "NULL"
-}else{
-    saved_image_detail_sql := "'" saved_image_detail "'"
-}
-if(saved_order_image_detail = ""){
-    saved_order_image_detail_sql := "NULL"
-}else{
-    saved_order_image_detail_sql := "'" saved_order_image_detail "'"
-}
-
-; 새로운 데이터 삽입
-myQuery =
-(
-INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image)
-VALUES ('%배송날짜%', '%출발시각1%', '%거래처명1%', '%배송지1%', '%기타메모1%', '%재단여부%', '%도어회사%', '%배송자%', '%전표번호%', '%전화번호%', 'Y', %총금액%, %입금액%, %업체코드%, %saved_image_detail_sql%, %saved_order_image_detail_sql%);
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "2_5 ErrorCode: " result[2] ", Error : " result[3]
-}else{
-}
-
-CONT1=
-CONT=
-
-
-; 0단계: 기존 임시 테이블 삭제
-myQuery =
-(
-DROP TEMPORARY TABLE IF EXISTS temp_new_data;
-)
-result := dbQuery(myDB, myQuery)
-
-; 1단계: 원본 테이블 구조로 임시 테이블 생성
-myQuery =
-(
-CREATE TEMPORARY TABLE temp_new_data LIKE tms_list;
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "임시 테이블 생성 ErrorCode: " result[2] ", Error : " result[3]
-    return
-}
-
-; 2단계: 엑셀 데이터 읽기 및 임시 테이블에 삽입
-행마1 := 행 - 1
-행마2 := 행 - 2
-
-if(행마2!=0){
-    Loop, % 행마2
-    {
-        pk := XL.ActiveSheet.Range("B" A_index).value
-        if(pk=""){
-            pk := "NULL"
-        }else{
-            pk := "'" pk "'"
-        }
-
-        내용 := XL.ActiveSheet.Range("C" A_index).value
-        if(내용=""){
-            내용 := "NULL"
-        }else{
-            내용 := "'" StrReplace(내용, "'", "''") "'"
-        }
-
-        수량 := XL.ActiveSheet.Range("D" A_index).value
-        수량 := RemoveDecimal(수량)
-        if(수량=""){
-            수량 := 0
-        }
-
-        단가 := XL.ActiveSheet.Range("E" A_index).value
-        단가 := RemoveDecimal(단가)
-        if(단가=""){
-            단가 := "NULL"
-        }
-
-        공급대가 := XL.ActiveSheet.Range("I" A_index).value
-        공급대가 := RemoveDecimal(공급대가)
-        if(공급대가=""){
-            공급대가 := "NULL"
-        }
-
-        pdtcode := XL.ActiveSheet.Range("G" A_index).value
-        pdtcode := RemoveDecimal(pdtcode)
-        if(pdtcode="2100000000"){
-            pdtcode := 0
-        }
-
-        비고 := XL.ActiveSheet.Range("F" A_index).value
-        if(비고=""){
-            비고 := "NULL"
-        }else{
-            비고 := "'" StrReplace(비고, "'", "''") "'"
-        }
-
-        no := XL.ActiveSheet.Range("H" A_index).value
-
-        CONT := "(" 전표번호 ", " pk ", NULL, " 내용 ", " 수량 ", " 단가 ", " 공급대가 ", " pdtcode ", " 비고 ", " no "),`n"
-        CONT1 .= CONT
-
-        if(행마2 = A_Index){
-            break
-        }
-    }
-}
-
-; 마지막 행 추가
-pk := XL.ActiveSheet.Range("B" 행마1).value
-if(pk=""){
-    pk := "NULL"
-}else{
-    pk := "'" pk "'"
-}
-
-내용 := XL.ActiveSheet.Range("C" 행마1).value
-if(내용=""){
-    내용 := "NULL"
-}else{
-    내용 := "'" StrReplace(내용, "'", "''") "'"
-}
-
-수량 := XL.ActiveSheet.Range("D" 행마1).value
-수량 := RemoveDecimal(수량)
-if(수량=""){
-    수량 := 0
-}
-
-단가 := XL.ActiveSheet.Range("E" 행마1).value
-단가 := RemoveDecimal(단가)
-if(단가=""){
-    단가 := "NULL"
-}
-
-공급대가 := XL.ActiveSheet.Range("I" 행마1).value
-공급대가 := RemoveDecimal(공급대가)
-if(공급대가=""){
-    공급대가 := "NULL"
-}
-
-pdtcode := XL.ActiveSheet.Range("G" 행마1).value
-pdtcode := RemoveDecimal(pdtcode)
-if(pdtcode="2100000000"){
-    pdtcode := 0
-}
-
-비고 := XL.ActiveSheet.Range("F" 행마1).value
-if(비고=""){
-    비고 := "NULL"
-}else{
-    비고 := "'" StrReplace(비고, "'", "''") "'"
-}
-
-no := XL.ActiveSheet.Range("H" 행마1).value
-
-CONT := "(" 전표번호 ", " pk ", NULL, " 내용 ", " 수량 ", " 단가 ", " 공급대가 ", " pdtcode ", " 비고 ", " no ")"
-CONT1 .= CONT
-
-; 3단계: 임시 테이블에 새 데이터 삽입
-myQuery =
-(
-INSERT INTO temp_new_data (ID, pk, 출, 내용, 수량, 단가, 공급대가, pdt_code, 비고, no)
-VALUES
-%CONT1%
-;
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "임시 테이블 삽입 ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
-    return
-}
-
-; 4단계: '출' 값 복사 - 수량도 동일해야 함!
-myQuery =
-(
-UPDATE temp_new_data t
-SET t.출 = (
-    SELECT o.출
-    FROM tms_list o
-    WHERE o.ID = t.ID
-        AND o.내용 = t.내용
-        AND o.수량 = t.수량
-        AND o.pdt_code = t.pdt_code
-        AND COALESCE(o.비고, '') = COALESCE(t.비고, '')
-        AND o.출 IS NOT NULL
-    ORDER BY ABS(o.no - t.no), o.no
-    LIMIT 1 );
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "'출' 값 복사 ErrorCode: " result[2] ", Error : " result[3]
-    return
-}
-
-; 5단계: 해당 ID의 모든 기존 데이터 삭제
-myQuery =
-(
-DELETE FROM tms_list WHERE ID = '%전표번호%';
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "기존 데이터 삭제 ErrorCode: " result[2] ", Error : " result[3]
-    return
-}
-
-; 6단계: 임시 테이블의 모든 데이터를 원본 테이블에 삽입
-myQuery =
-(
-INSERT INTO tms_list (ID, pk, 출, 내용, 수량, 단가, 공급대가, pdt_code, 비고, no)
-SELECT ID, pk, 출, 내용, 수량, 단가, 공급대가, pdt_code, 비고, no
-FROM temp_new_data;
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "데이터 삽입 ErrorCode: " result[2] ", Error : " result[3]
-    return
-}
-
-; 7단계: 임시 테이블 삭제
-myQuery =
-(
-DROP TEMPORARY TABLE IF EXISTS temp_new_data;
-)
-result := dbQuery(myDB, myQuery)
-
-;~ MsgBox, % "데이터 처리 완료!"
-
-
-
-
-
-;~ XL.ActiveWorkbook.Save()
-wb := ""
-ws := ""
-XL.ActiveWorkbook.Close(0)
-XL.Quit()
-XL := ""
-
-
-Sleep, 100
-
-
-;~ MsgBox, , ,적성완료, 0.8
-;~ Sleep, 800
-
-;~ Sleep, 1000
-	;~ winkill, ahk_exe hcell.exe
-	;~ Process, close, EXCEL.EXE
-Sleep, 100
-MsgBox, , ,거래처원장 상세 완료, 0.8
-
-
-return
+	return
 }
 
 
@@ -4488,383 +3918,421 @@ image_backup := ""
 !+7::
 캘린더3:
 {
-	Loop, 30  ; 최대 30번 시도 (3초 타임아웃)
+	; ===== TfmEstimate2 → Firebird ESTIMATETOP/ESTIMATE → tms_2/tms_list INSERT =====
+	; fr3/Excel export 우회. 실시간 데이터.
+
+	; 폼 F5 저장 강제 (Firebird commit 대기)
+	ControlSend, , {F5}, ahk_class TfmEstimate2
+	Sleep, 500
+	IfWinExist, 재고 확인
 	{
-		Sleep, 100
-		if FileExist(A_MyDocuments "\5.입하지시서.xml"){
-			FileDelete, %A_MyDocuments%\5.입하지시서.xml
-		}else{
-			break
-		}
+		WinWaitClose, 재고 확인, , 60
 	}
+	Sleep, 500
 
-ControlGetText, 납기날짜1, TRzDBDateTimeEdit3, ahk_class TfmEstimate2
-ControlGetText, 거래처명1, Edit2,  %WINTITLE%
-;~ ControlGetText04, 배송날짜, Edit3,  %WINTITLE%
-ControlGetText, 출발시각1, Edit4,  %WINTITLE%
-ControlGetText, 배송지1, Edit5,  %WINTITLE%
-ControlGetText, 기타메모1, Edit6,  %WINTITLE%
-ControlGetText, 내용1, Edit7,  %WINTITLE%
-ControlGetText, 전화번호, Edit8, %WINTITLE%
-ControlGetText, 재단여부, Edit11, %WINTITLE%
+	ControlGetText, 거래처명1, Edit2, %WINTITLE%
+	ControlGetText, 배송날짜1, Edit3, %WINTITLE%
+	ControlGetText, 출발시각1, Edit4, %WINTITLE%
+	ControlGetText, 배송지1, Edit5, %WINTITLE%
+	ControlGetText, 기타메모1, Edit6, %WINTITLE%
+	ControlGetText, 전화번호, Edit8, %WINTITLE%
+	ControlGetText, 재단여부, Edit11, %WINTITLE%
 
+	ControlGetText, et_date_raw, TRzDBDateTimeEdit1, ahk_class TfmEstimate2
+	ControlGetText, g_name_raw, TRzEdit2, ahk_class TfmEstimate2
+	ControlGetText, et_no_raw, TRzDBEdit1, ahk_class TfmEstimate2
 
-	WinWait, ahk_class TfmEstimate2,
-	IfWinNotActive, ahk_class TfmEstimate2, , WinActivate, ahk_class TfmEstimate2,
-	WinWaitActive, ahk_class TfmEstimate2,
-	Sleep, 200
-
-Send, {F8}
-
-ControlClick, TRzBitBtn8, ahk_class TfmChitSale
-	WinWait, 인쇄리스트,
-	IfWinNotActive, 인쇄리스트, , WinActivate, 인쇄리스트,
-	WinWaitActive, 인쇄리스트,
-	sleep,500
-
-send, {home}{down 5}{tab 7}{enter}
-Sleep, 200
-
-
-Sleep, 200
-;~ winkill, ahk_exe hcell.exe
-	WinWait, Export to Excel,
-	IfWinNotActive, Export to Excel, , WinActivate, Export to Excel,
-	WinWaitActive, Export to Excel,
-	Sleep, 200
-
-send, {ShiftDown}{Tab}{ShiftUp}{Space}{tab}
-Sleep, 200
-Send, {enter}
-Sleep, 500
-ControlSetText, edit1, %A_MyDocuments%\5.입하지시서.xml, 다른 이름으로 저장
-Sleep, 100
-
-Send, {tab 2}{enter}
-
-
-
-
-Sleep, 100
-
-SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\기록중.mp3
-
-	Loop, 300  ; 최대 300번 시도 (30초 타임아웃)
+	if (g_name_raw = "" or et_date_raw = "")
 	{
-		Sleep, 100
-		if FileExist(A_MyDocuments "\5.입하지시서.xml"){
-			Sleep, 1000
-			break
-		}else{
-		}
-	}
-	if (A_Index >= 300) {
-		MsgBox, 파일 생성 대기 타임아웃: 5.입하지시서.xml
+		MsgBox, 16, 캘린더3, TfmEstimate2 거래처 또는 날짜를 읽지 못했습니다.`n거래처: %g_name_raw%`n날짜: %et_date_raw%
 		return
 	}
 
+	fbConn := FbConnect()
+	if (fbConn = "")
+		return
+
+	g_name_clean := g_name_raw
+	parenPos := InStr(g_name_clean, "(", false, 0)
+	if (parenPos > 0 && (StrLen(g_name_clean) - parenPos) < 8)
+		g_name_clean := SubStr(g_name_clean, 1, parenPos - 1)
+	g_name_clean := Trim(g_name_clean)
+	RegExMatch(et_date_raw, "\d{4}-\d{2}-\d{2}", et_date_clean)
+	if (et_date_clean = "")
+		et_date_clean := et_date_raw
+
+	safeName := StrReplace(g_name_clean, "'", "''")
+	sqlEt := "SELECT FIRST 1 ET_PK FROM ESTIMATETOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE '" . safeName . "%' AND ET_DATE = '" . et_date_clean . "' ORDER BY ET_PK DESC"
+
+	try
+		rs := fbConn.Execute(sqlEt)
+	catch e
+	{
+		MsgBox, 16, ET_PK 조회 실패, % "SQL:`n" sqlEt "`n`n에러: " e.Message
+		fbConn.Close()
+		return
+	}
+
+	if rs.EOF
+	{
+		MsgBox, 16, 캘린더3, % "ET_PK를 찾을 수 없습니다.`n거래처: " g_name_raw "`n날짜: " et_date_raw
+		rs.Close()
+		fbConn.Close()
+		return
+	}
+
+	et_pk := rs.Fields("ET_PK").Value
+	rs.Close()
+
+	sqlEst := "SELECT E_PK, J_PK, CAST(J_NAME AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_NAME_K, CAST(J_STANDARD AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_STANDARD_K, E_QTY, CAST(J_GITA AS VARCHAR(20) CHARACTER SET KSC_5601) AS J_GITA_K, E_NO FROM ESTIMATE WHERE ET_PK = " . et_pk . " ORDER BY E_NO"
+
+	try
+		rs := fbConn.Execute(sqlEst)
+	catch e
+	{
+		MsgBox, 16, ESTIMATE 조회 실패, % "SQL:`n" sqlEst "`n`n에러: " e.Message
+		fbConn.Close()
+		return
+	}
+
+	CONT1 := ""
+	pkList := ""
+	rowCount := 0
+	while !rs.EOF
+	{
+		e_pk := rs.Fields("E_PK").Value
+		j_pk := rs.Fields("J_PK").Value
+		j_name := rs.Fields("J_NAME_K").Value
+		j_standard := rs.Fields("J_STANDARD_K").Value
+		e_qty := rs.Fields("E_QTY").Value
+		j_gita := rs.Fields("J_GITA_K").Value
+		e_no := rs.Fields("E_NO").Value
+
+		if (e_qty = "")
+			e_qty := 0
+		if (j_pk = "")
+			j_pk := 0
+		if (e_no = "")
+			e_no := 0
+
+		if (j_gita = "")
+			gitaVal := "NULL"
+		else
+		{
+			j_gita_e := StrReplace(j_gita, "'", "''")
+			j_gita_e := StrReplace(j_gita_e, "(", " ")
+			j_gita_e := StrReplace(j_gita_e, ")", " ")
+			gitaVal := "'" . j_gita_e . "'"
+		}
+
+		nameComb := j_name . " / " . j_standard
+		nameComb := StrReplace(nameComb, "'", "''")
+
+		if (CONT1 != "")
+			CONT1 .= ",`n"
+		CONT1 .= "(" . et_pk . ", '" . e_pk . "', NULL, '" . nameComb . "', " . e_qty . ", " . j_pk . ", " . gitaVal . ", " . e_no . ")"
+		if (pkList != "")
+			pkList .= ","
+		pkList .= "'" . e_pk . "'"
+		rowCount += 1
+
+		rs.MoveNext()
+	}
+	rs.Close()
+	fbConn.Close()
+
+	if (CONT1 = "")
+	{
+		MsgBox, 16, 캘린더3, % "ESTIMATE 명세 행이 없습니다. ET_PK=" . et_pk
+		return
+	}
+
+	RegExMatch(배송날짜1, "\d{4}-\d{2}-\d{2}", 배송날짜_only)
+	if (배송날짜_only = "")
+		배송날짜_only := 배송날짜1
+
+	; 주문↔매출↔매입 전환 시 반대 테이블 row가 남지 않도록 양쪽 모두 DELETE
+	dbQuery(myDB, "DELETE FROM tms WHERE ID = '" . et_pk . "';")
+	dbQuery(myDB, "DELETE FROM tms_2 WHERE ID = '" . et_pk . "';")
+
+	배송날짜_safe := StrReplace(배송날짜_only, "'", "''")
+	출발시각1_safe := StrReplace(출발시각1, "'", "''")
+	거래처명1_safe := StrReplace(거래처명1, "'", "''")
+	배송지1_safe := StrReplace(배송지1, "'", "''")
+	기타메모1_safe := StrReplace(기타메모1, "'", "''")
+	전화번호_safe := StrReplace(전화번호, "'", "''")
+
+	myQuery := "INSERT INTO tms_2 (날짜, 시간, 업체, 입고지, 비고, 픽업, 진행, 배송자, ID, 전화번호, 상태) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', NULL, '주문', NULL, " . et_pk . ", '" . 전화번호_safe . "', 'A');"
+	result := dbQuery(myDB, myQuery)
+	if(errorCheck(result)){
+		MsgBox, % "tms_2 INSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
+		return
+	}
+
+	; ===== tms_list UPSERT: 기존 행은 UPDATE(수량 같으면 출 보존, 다르면 NULL), 신규 행은 INSERT =====
+	myQuery := "INSERT INTO tms_list (ID, pk, 출, 내용, 수량, pdt_code, 비고, no) VALUES`n" . CONT1 . "`nON DUPLICATE KEY UPDATE`n  내용 = VALUES(내용),`n  pdt_code = VALUES(pdt_code),`n  비고 = VALUES(비고),`n  no = VALUES(no),`n  출 = CASE WHEN tms_list.수량 != VALUES(수량) THEN NULL ELSE tms_list.출 END,`n  수량 = VALUES(수량);"
+	result := dbQuery(myDB, myQuery)
+	if(errorCheck(result)){
+		MsgBox, % "tms_list UPSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
+		return
+	}
+
+	myQuery := "DELETE FROM tms_list WHERE ID = '" . et_pk . "' AND pk NOT IN (" . pkList . ");"
+	result := dbQuery(myDB, myQuery)
+	if(errorCheck(result)){
+		MsgBox, % "tms_list cleanup ErrorCode: " result[2] ", Error : " result[3]
+	}
+
+	EnvSet, PATH, %A_EnvPath%;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\Scripts\
+	Run, python "C:\Users\shwoodnew\tms_new\send_purchase_fcm.py"
+
+	run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
+
+	SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\F1.mp3
+	Sleep, 100
+
+	verifyTms := dbQuery(myDB, "SELECT COUNT(*) FROM tms WHERE ID = '" . et_pk . "';")
+	verifyTms2 := dbQuery(myDB, "SELECT COUNT(*) FROM tms_2 WHERE ID = '" . et_pk . "';")
+	verifyList := dbQuery(myDB, "SELECT COUNT(*) FROM tms_list WHERE ID = '" . et_pk . "';")
+	tmsCnt := IsObject(verifyTms) ? verifyTms[1][1] : "?"
+	tms2Cnt := IsObject(verifyTms2) ? verifyTms2[1][1] : "?"
+	listCnt := IsObject(verifyList) ? verifyList[1][1] : "?"
+	MsgBox, 64, 캘린더3 (발주) 완료, % "ET_PK = " et_pk "`n예상: " rowCount " 행`ntms: " tmsCnt " / tms_2: " tms2Cnt " / tms_list: " listCnt, 3
+
+	return
+}
 
 
-; ;;;;;;; 파이썬 FCM 실행
-EnvSet, PATH, %A_EnvPath%;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\Scripts\
-Run, python "C:\Users\shwoodnew\tms_new\send_purchase_fcm.py"
-; ;;;;;;; 파이썬 FCM 실행
-
-
-run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
-
-;~ path := A_MyDocuments . "\7_2번째 전표.xlsx"
-path2 := A_MyDocuments . "\5.입하지시서.xml"
-xl=
-Sleep, 100
-Global XL ; 중요함
-
-XL := ComObjCreate("Excel.Application")
-XL.Workbooks.Open(path2, 3, 0)
-
-XL.Visible := false
-
-
-XL.ActiveSheet.Range("1:500").select
-XL.selection.Replace("0.00","")
-
-
-XL.ActiveSheet.Range("1:1").Delete
-XL.ActiveSheet.Range("G:G").Delete
-XL.ActiveSheet.Range("H:AB").Delete
-찾는문자 := "이하여백"
-범위 := XL.ActiveSheet.Range("B:B").Find(찾는문자)
-행 := 범위.Row
-;~ 행 := 행 + 1
-;~ MsgBox, % 행 찾는문자
-XL.ActiveSheet.Range(행 ":500").Delete
-XL.ActiveSheet.Range("A:G").NumberFormat := "@"
-XL.ActiveSheet.Range("A:A").NumberFormat := "@"
-
-			전표번호 := XL.ActiveSheet.Range("A1").value
-
-			전표번호 := StrReplace(전표번호, "," , "")
-
-
-1출발시각 := RegExReplace(출발시각1, "[0-9]" , "")
-
-
-if (1출발시각 = "::")
+캘린더4:
 {
-	RegExMatch(출발시각1, "(.*):(.*):(.*)", 1time)
-	출발시각1 = % 1time1 "시" 1time2 "출"
+	; ===== TfmChitBuy → Firebird 직접 조회 → tms_2/tms_list INSERT =====
+	; fr3/Excel export 우회. 실시간 데이터 (MySQL fb_* 미러는 5분 lag).
+
+	; 폼 F5 저장 강제 (Firebird commit 대기)
+	ControlSend, , {F5}, ahk_class TfmChitBuy
+	Sleep, 500
+	IfWinExist, 재고 확인
+	{
+		WinWaitClose, 재고 확인, , 60
+	}
+	Sleep, 500
+
+	ControlGetText, 거래처명1, Edit2, %WINTITLE%
+	ControlGetText, 출발시각1, Edit4, %WINTITLE%
+	ControlGetText, 배송지1, Edit5, %WINTITLE%
+	ControlGetText, 기타메모1, Edit6, %WINTITLE%
+	ControlGetText, 전화번호, Edit8, %WINTITLE%
+
+	ControlGetText, ct_date_raw, TRzDBDateTimeEdit1, ahk_class TfmChitBuy
+	ControlGetText, ct_time_raw, TRzDBEdit14, ahk_class TfmChitBuy
+	ControlGetText, g_name_raw, TRzDBEdit18, ahk_class TfmChitBuy
+
+	if (g_name_raw = "" or ct_date_raw = "")
+	{
+		MsgBox, 16, 캘린더4, TfmChitBuy 거래처 또는 날짜를 읽지 못했습니다.`n거래처: %g_name_raw%`n날짜: %ct_date_raw%
+		return
+	}
+
+	; ─── Firebird 접속 정보 ───────────────────────
+	fbHost := "192.168.0.7"
+	fbPort := "3050"
+	fbDb   := "jedaero_server"
+	fbUser := "SYSDBA"
+	fbPw   := "masterkey"
+	; ──────────────────────────────────────────────
+
+	fbConn := ComObjCreate("ADODB.Connection")
+	fbConnStr := "Driver={Firebird/InterBase(r) driver};DBNAME=" . fbHost . "/" . fbPort . ":" . fbDb . ";UID=" . fbUser . ";PWD=" . fbPw . ";CHARSET=NONE;"
+	try
+	{
+		fbConn.Open(fbConnStr)
+	}
+	catch e
+	{
+		MsgBox, 16, Firebird 연결 실패, % "연결 문자열:`n" fbConnStr "`n`n에러: " e.Message
+		return
+	}
+
+	g_name_clean := g_name_raw
+	parenPos := InStr(g_name_clean, "(", false, 0)
+	if (parenPos > 0 && (StrLen(g_name_clean) - parenPos) < 8)
+		g_name_clean := SubStr(g_name_clean, 1, parenPos - 1)
+	g_name_clean := Trim(g_name_clean)
+	RegExMatch(ct_date_raw, "\d{4}-\d{2}-\d{2}", ct_date_clean)
+	if (ct_date_clean = "")
+		ct_date_clean := ct_date_raw
+
+	safeName := StrReplace(g_name_clean, "'", "''")
+	sqlCt := "SELECT FIRST 1 CT_PK FROM CHITTOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE '" . safeName . "%' AND CT_DATE = '" . ct_date_clean . "' AND CAST(CT_GUBUN AS VARCHAR(10) CHARACTER SET KSC_5601) = '매입' ORDER BY CT_PK DESC"
+
+	try
+	{
+		rs := fbConn.Execute(sqlCt)
+	}
+	catch e
+	{
+		MsgBox, 16, CT_PK 조회 실패, % "SQL:`n" sqlCt "`n`n에러: " e.Message
+		fbConn.Close()
+		return
+	}
+
+	if rs.EOF
+	{
+		MsgBox, 16, 캘린더4, % "CT_PK를 찾을 수 없습니다.`n거래처: " g_name_raw "`n날짜: " ct_date_raw "`n시간: " ct_time_raw
+		rs.Close()
+		fbConn.Close()
+		return
+	}
+
+	ct_pk := rs.Fields("CT_PK").Value
+	rs.Close()
+
+	sqlChit := "SELECT C_PK, J_PK, CAST(J_NAME AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_NAME_K, CAST(J_STANDARD AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_STANDARD_K, C_QTY, CAST(J_GITA AS VARCHAR(20) CHARACTER SET KSC_5601) AS J_GITA_K, C_NO FROM CHIT WHERE CT_PK = " . ct_pk . " ORDER BY C_NO"
+
+	try
+	{
+		rs := fbConn.Execute(sqlChit)
+	}
+	catch e
+	{
+		MsgBox, 16, CHIT 조회 실패, % "SQL:`n" sqlChit "`n`n에러: " e.Message
+		fbConn.Close()
+		return
+	}
+
+	CONT1 := ""
+	pkList := ""
+	rowCount := 0
+	while !rs.EOF
+	{
+		c_pk := rs.Fields("C_PK").Value
+		j_pk := rs.Fields("J_PK").Value
+		j_name := rs.Fields("J_NAME_K").Value
+		j_standard := rs.Fields("J_STANDARD_K").Value
+		c_qty := rs.Fields("C_QTY").Value
+		j_gita := rs.Fields("J_GITA_K").Value
+		c_no := rs.Fields("C_NO").Value
+
+		if (c_qty = "")
+			c_qty := 0
+		if (j_pk = "")
+			j_pk := 0
+		if (c_no = "")
+			c_no := 0
+
+		if (j_gita = "")
+			gitaVal := "NULL"
+		else
+		{
+			j_gita_e := StrReplace(j_gita, "'", "''")
+			j_gita_e := StrReplace(j_gita_e, "(", " ")
+			j_gita_e := StrReplace(j_gita_e, ")", " ")
+			gitaVal := "'" . j_gita_e . "'"
+		}
+
+		nameComb := j_name . " / " . j_standard
+		nameComb := StrReplace(nameComb, "'", "''")
+
+		if (CONT1 != "")
+			CONT1 .= ",`n"
+		CONT1 .= "(" . ct_pk . ", '" . c_pk . "', NULL, '" . nameComb . "', " . c_qty . ", " . j_pk . ", " . gitaVal . ", " . c_no . ")"
+		if (pkList != "")
+			pkList .= ","
+		pkList .= "'" . c_pk . "'"
+		rowCount += 1
+
+		rs.MoveNext()
+	}
+	rs.Close()
+	fbConn.Close()
+
+	if (CONT1 = "")
+	{
+		MsgBox, 16, 캘린더4, % "CHIT 명세 행이 없습니다. CT_PK=" . ct_pk
+		return
+	}
+
+	RegExMatch(배송날짜, "\d{4}-\d{2}-\d{2}", 배송날짜_only)
+	if (배송날짜_only = "")
+		배송날짜_only := 배송날짜
+
+	; 매입↔매출↔주문 전환 시 반대 테이블 row가 남지 않도록 양쪽 모두 DELETE
+	dbQuery(myDB, "DELETE FROM tms WHERE ID = '" . ct_pk . "';")
+	dbQuery(myDB, "DELETE FROM tms_2 WHERE ID = '" . ct_pk . "';")
+
+	배송날짜_safe := StrReplace(배송날짜_only, "'", "''")
+	출발시각1_safe := StrReplace(출발시각1, "'", "''")
+	거래처명1_safe := StrReplace(거래처명1, "'", "''")
+	배송지1_safe := StrReplace(배송지1, "'", "''")
+	기타메모1_safe := StrReplace(기타메모1, "'", "''")
+	전화번호_safe := StrReplace(전화번호, "'", "''")
+
+	myQuery := "INSERT INTO tms_2 (날짜, 시간, 업체, 입고지, 비고, 픽업, 진행, 배송자, ID, 전화번호, 상태) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', NULL, '매입', NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'A');"
+	result := dbQuery(myDB, myQuery)
+	if(errorCheck(result)){
+		MsgBox, % "tms_2 INSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
+		return
+	}
+
+	; ===== tms_list UPSERT: 기존 행은 UPDATE(수량 같으면 출 보존, 다르면 NULL), 신규 행은 INSERT =====
+	myQuery := "INSERT INTO tms_list (ID, pk, 출, 내용, 수량, pdt_code, 비고, no) VALUES`n" . CONT1 . "`nON DUPLICATE KEY UPDATE`n  내용 = VALUES(내용),`n  pdt_code = VALUES(pdt_code),`n  비고 = VALUES(비고),`n  no = VALUES(no),`n  출 = CASE WHEN tms_list.수량 != VALUES(수량) THEN NULL ELSE tms_list.출 END,`n  수량 = VALUES(수량);"
+	result := dbQuery(myDB, myQuery)
+	if(errorCheck(result)){
+		MsgBox, % "tms_list UPSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
+		return
+	}
+
+	myQuery := "DELETE FROM tms_list WHERE ID = '" . ct_pk . "' AND pk NOT IN (" . pkList . ");"
+	result := dbQuery(myDB, myQuery)
+	if(errorCheck(result)){
+		MsgBox, % "tms_list cleanup ErrorCode: " result[2] ", Error : " result[3]
+	}
+
+	EnvSet, PATH, %A_EnvPath%;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\Scripts\
+	Run, python "C:\Users\shwoodnew\tms_new\send_purchase_fcm.py"
+
+	run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
+
+	SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\F1.mp3
+	Sleep, 100
+
+	verifyTms := dbQuery(myDB, "SELECT COUNT(*) FROM tms WHERE ID = '" . ct_pk . "';")
+	verifyTms2 := dbQuery(myDB, "SELECT COUNT(*) FROM tms_2 WHERE ID = '" . ct_pk . "';")
+	verifyList := dbQuery(myDB, "SELECT COUNT(*) FROM tms_list WHERE ID = '" . ct_pk . "';")
+	tmsCnt := IsObject(verifyTms) ? verifyTms[1][1] : "?"
+	tms2Cnt := IsObject(verifyTms2) ? verifyTms2[1][1] : "?"
+	listCnt := IsObject(verifyList) ? verifyList[1][1] : "?"
+	MsgBox, 64, 캘린더4 (매입) 완료, % "CT_PK = " ct_pk "`n예상: " rowCount " 행`ntms: " tmsCnt " / tms_2: " tms2Cnt " / tms_list: " listCnt, 3
+
+	return
 }
-else
+
+
+
+
+
+
+
+
+
+RemoveDecimal(Number) {
+    return Floor(Number)
+}
+
+; Firebird ODBC 연결 객체 반환. 실패 시 "" 반환 + MsgBox.
+FbConnect()
 {
-}
-
-
-
-if (ddl = "예림"){
-	도어회사 = 예
+	fbConn := ComObjCreate("ADODB.Connection")
+	connStr := "Driver={Firebird/InterBase(r) driver};DBNAME=192.168.0.7/3050:jedaero_server;UID=SYSDBA;PWD=masterkey;CHARSET=UTF8;"
+	try
+		fbConn.Open(connStr)
+	catch e
+	{
+		MsgBox, 16, Firebird 연결 실패, % "에러: " e.Message
+		return ""
 	}
-else if (ddl = "우딘"){
-	도어회사 = 우
-	}
-else if (ddl = "재현"){
-	도어회사 = 재
-	}
-else if (ddl = "크로스"){
-	도어회사 = 크
-	}
-else
-{
-	도어회사 =
+	return fbConn
 }
-
-
-픽업=NULL
-배송자=NULL
-진행=주문
-
-파일이름1 := "A" 배송날짜 "_B" 출발시각1 "_C" 거래처명1 "_D" 배송지1 "_E" 기타메모1 "_V" 재단여부 "_G주문_C"
-
-파일이름1 := StrReplace(파일이름1, "/" , ",")
-파일이름1 := StrReplace(파일이름1, "\" , ",")
-파일이름1 := StrReplace(파일이름1, ":" , ",")
-파일이름1 := StrReplace(파일이름1, "*" , ",")
-파일이름1 := StrReplace(파일이름1, "?" , ",")
-파일이름1 := StrReplace(파일이름1, "<" , ",")
-파일이름1 := StrReplace(파일이름1, ">" , ",")
-파일이름1 := StrReplace(파일이름1, "|" , ",")
-파일이름1 := StrReplace(파일이름1, "." , ",")
-파일이름1 := StrReplace(파일이름1, "[" , ",")
-파일이름1 := StrReplace(파일이름1, "]" , ",")
-파일이름1 := StrReplace(파일이름1, " " , ",")
-
-
-
-
-CONT1=
-CONT=
-
-
-
-
-myQuery =
-(
-DELETE FROM tms_2 WHERE ID = '%전표번호%';
-)
-result := dbQuery(myDB, myQuery)
-if(errorCheck(result)){
-    MsgBox, % "tms 삭제 ErrorCode: " result[2] ", Error : " result[3]
-}
-
-
-
-;                                                                     픽업 진행 배송자 null 값이 있어서 '' 를 사용한다
-          myQuery =
-          myQuery =
-            (
-			INSERT INTO tms_2 (날짜, 시간, 업체, 입고지, 비고, 픽업, 진행, 배송자, ID, 전화번호, 상태)
-			VALUES ('%배송날짜%', '%출발시각1%', '%거래처명1%', '%배송지1%', '%기타메모1%', %픽업%, '%진행%', %배송자%, %전표번호%, '%전화번호%', 'A');
-			)
-			;~ MsgBox, % myQuery
-
-            result := dbQuery(myDB, myQuery)
-			if(errorCheck(result)){
-				MsgBox, % "ErrorCode: " result[2] ", Error : " result[3]
-			}else{
-			}
-
-
-			행마1 := 행 - 1
-			행마2 := 행 - 2
-			if(행마2!=0){
-				Loop, % 행마2 ; csv 파일 값 입력 하기
-				{
-
-
-
-					pk := XL.ActiveSheet.Range("B" A_index).value
-					if(pk=""){
-						pk := "NULL"
-					}else{
-						pk := "'" pk "'"
-					}
-pk := StrReplace(pk, "," , "")
-
-
-
-					내용 := XL.ActiveSheet.Range("C" A_index).value
-					if(내용=""){
-						내용=NULL
-					}else{
-						내용 := "'" 내용
-						내용 := 내용 "'"
-					}
-					수량 := XL.ActiveSheet.Range("D" A_index).value
-					수량 := RemoveDecimal(수량) ; 정수로 바꾸기
-
-					if(수량=""){
-						수량=0
-					}else{
-					}
-
-					pdtcode := XL.ActiveSheet.Range("E" A_index).value
-					pdtcode := RemoveDecimal(pdtcode) ; 정수로 바꾸기
-
-
-
-
-					if(pdtcode="2100000000"){
-						pdtcode=0
-					}else{
-					}
-					비고 := XL.ActiveSheet.Range("F" A_index).value
-
-					if(비고=""){
-						비고=NULL
-					}else{
-						비고 := 비고 "'"
-						비고 := "'" 비고
-					}
-
-
-비고 := StrReplace(비고, "(" , " ")
-비고 := StrReplace(비고, ")" , " ")
-
-
-					no := XL.ActiveSheet.Range("G" A_index).value ; 전표숫자
-
-					CONT := "(" 전표번호 ", " pk ", NULL, " 내용 ", " 수량 ", " pdtcode ", " 비고 ", " no "),`n"
-					CONT1 .= CONT
-					if( 행마2 = A_Index){
-						break
-					}else{
-					}
-					;~ MsgBox, % CONT1 "`n" A_Index "`n" 행 "`n" 전표번호 "`n" 내용 "`n" 수량 "`n" pdtcode "`n" 비고
-				}
-			}else{
-			}
-
-
-				pk := XL.ActiveSheet.Range("B" 행마1).value
-				if(pk=""){
-					pk := "NULL"
-				}else{
-					pk := "'" pk "'"
-				}
-pk := StrReplace(pk, "," , "")
-
-				; 마지막 행 추가
-				내용 := XL.ActiveSheet.Range("C" 행마1).value
-				if(내용=""){
-					내용=NULL
-				}else{
-					내용 := "'" 내용
-					내용 := 내용 "'"
-				}
-				수량 := XL.ActiveSheet.Range("D" 행마1).value
-				수량 := RemoveDecimal(수량) ; 정수로 바꾸기
-
-				if(수량=""){
-					수량=0
-				}else{
-				}
-
-				pdtcode := XL.ActiveSheet.Range("E" 행마1).value
-				pdtcode := RemoveDecimal(pdtcode) ; 정수로 바꾸기
-
-
-				if(pdtcode="2100000000"){
-					pdtcode=0
-				}else{
-				}
-				비고 := XL.ActiveSheet.Range("F" 행마1).value
-
-				if(비고=""){
-					비고=NULL
-				}else{
-					비고 := 비고 "'"
-					비고 := "'" 비고
-				}
-
-비고 := StrReplace(비고, "(" , " ")
-비고 := StrReplace(비고, ")" , " ")
-
-				no := XL.ActiveSheet.Range("G" 행마1).value ; 전표숫자
-
-				CONT := "(" 전표번호 ", " pk ", NULL, " 내용 ", " 수량 ", " pdtcode ", " 비고 ", " no ")"
-				CONT1 .= CONT
-
-				;~ CONT1 .= "`n;"
-
-
-			;~ MsgBox, % CONT1
-
-
-			myQuery =
-			myQuery =
-            (
-			INSERT INTO tms_list (ID, pk, 출, 내용, 수량, pdt_code, 비고, no)
-			VALUES
-			%CONT1%
-			;
-			)
-			;~ MsgBox, % "myQuery`n" myQuery
-            result := dbQuery(myDB, myQuery)
-			if(errorCheck(result)){
-				MsgBox, % "ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
-			}else{
-			}
-
-
-
-
-
-;~ XL.ActiveWorkbook.Save()
-wb := ""
-ws := ""
-XL.ActiveWorkbook.Close(0)
-XL.Quit()
-XL := ""
-Sleep, 100
-SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\F1.mp3
-
-;~ MsgBox, , ,적성완료, 0.8
-;~ Sleep, 800
-
-run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
-
-Sleep, 100
-
-
-return
-}
-
-
-
-
-
-
-
-
 
 ; 요일 구하기 함수
 Get_Weekday(parmDate, parmMode)
