@@ -2475,7 +2475,8 @@ else
 		총금액 := 0
 	rs.Close()
 
-	sqlCt2 := "SELECT CT_SALEHAP, CT_INPAY FROM CHITTOP WHERE CT_PK = " . ct_pk
+	sqlCt2 := "SELECT CT_SALEHAP, CT_INPAY, G_PK FROM CHITTOP WHERE CT_PK = " . ct_pk
+	g_pk := 0
 	try
 	{
 		rs := fbConn.Execute(sqlCt2)
@@ -2483,6 +2484,7 @@ else
 		{
 			총금액 := rs.Fields("CT_SALEHAP").Value
 			입금액 := rs.Fields("CT_INPAY").Value
+			g_pk := rs.Fields("G_PK").Value
 		}
 		rs.Close()
 	}
@@ -2583,7 +2585,8 @@ else
 	재단여부_safe := StrReplace(재단여부, "'", "''")
 	전화번호_safe := StrReplace(전화번호, "'", "''")
 
-	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", NULL, NULL, NULL);"
+	업체코드_val := (g_pk && g_pk != "") ? g_pk : "NULL"
+	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", " . 업체코드_val . ", NULL, NULL);"
 	result := dbQuery(myDB, myQuery)
 	if(errorCheck(result)){
 		MsgBox, % "tms INSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
@@ -2612,6 +2615,10 @@ else
 	; listCnt := IsObject(verifyList) ? verifyList[1][1] : "?"
 	; charsetChk := dbQuery(myDB, "SHOW VARIABLES LIKE 'character_set_client';")
 	; csVal := IsObject(charsetChk) ? charsetChk[1][2] : "?"
+
+	; FCM 알림 (매출)
+	EnvSet, PATH, %A_EnvPath%;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\Scripts\
+	Run, python "C:\Users\shwoodnew\tms_new\send_custom_fcm.py" %ct_pk%
 
 	run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
 
@@ -2871,7 +2878,8 @@ return
 
 	총금액 := 0
 	입금액 := 0
-	sqlCt2 := "SELECT CT_SALEHAP, CT_INPAY FROM CHITTOP WHERE CT_PK = " . ct_pk
+	sqlCt2 := "SELECT CT_SALEHAP, CT_INPAY, G_PK FROM CHITTOP WHERE CT_PK = " . ct_pk
+	g_pk := 0
 	try
 	{
 		rs := fbConn.Execute(sqlCt2)
@@ -2879,6 +2887,7 @@ return
 		{
 			총금액 := rs.Fields("CT_SALEHAP").Value
 			입금액 := rs.Fields("CT_INPAY").Value
+			g_pk := rs.Fields("G_PK").Value
 		}
 		rs.Close()
 	}
@@ -2978,7 +2987,8 @@ return
 	재단여부_safe := StrReplace(재단여부, "'", "''")
 	전화번호_safe := StrReplace(전화번호, "'", "''")
 
-	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", NULL, NULL, NULL);"
+	업체코드_val := (g_pk && g_pk != "") ? g_pk : "NULL"
+	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", " . 업체코드_val . ", NULL, NULL);"
 	result := dbQuery(myDB, myQuery)
 	if(errorCheck(result)){
 		MsgBox, % "tms INSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
@@ -2998,6 +3008,10 @@ return
 	if(errorCheck(result)){
 		MsgBox, % "tms_list cleanup ErrorCode: " result[2] ", Error : " result[3]
 	}
+
+	; FCM 알림 (매출)
+	EnvSet, PATH, %A_EnvPath%;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\Scripts\
+	Run, python "C:\Users\shwoodnew\tms_new\send_custom_fcm.py" %ct_pk%
 
 	run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
 
@@ -3962,7 +3976,7 @@ image_backup := ""
 		et_date_clean := et_date_raw
 
 	safeName := StrReplace(g_name_clean, "'", "''")
-	sqlEt := "SELECT FIRST 1 ET_PK FROM ESTIMATETOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE '" . safeName . "%' AND ET_DATE = '" . et_date_clean . "' ORDER BY ET_PK DESC"
+	sqlEt := "SELECT FIRST 1 ET_PK, G_PK FROM ESTIMATETOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE '" . safeName . "%' AND ET_DATE = '" . et_date_clean . "' ORDER BY ET_PK DESC"
 
 	try
 		rs := fbConn.Execute(sqlEt)
@@ -3982,6 +3996,11 @@ image_backup := ""
 	}
 
 	et_pk := rs.Fields("ET_PK").Value
+	g_pk := 0
+	try
+		g_pk := rs.Fields("G_PK").Value
+	catch
+		g_pk := 0
 	rs.Close()
 
 	sqlEst := "SELECT E_PK, J_PK, CAST(J_NAME AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_NAME_K, CAST(J_STANDARD AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_STANDARD_K, E_QTY, CAST(J_GITA AS VARCHAR(20) CHARACTER SET KSC_5601) AS J_GITA_K, E_NO FROM ESTIMATE WHERE ET_PK = " . et_pk . " ORDER BY E_NO"
@@ -4062,6 +4081,8 @@ image_backup := ""
 	기타메모1_safe := StrReplace(기타메모1, "'", "''")
 	전화번호_safe := StrReplace(전화번호, "'", "''")
 
+	; tms_2 에 업체코드 컬럼이 없으므로 헤더에 G_PK 직접 INSERT 못 함
+	; (Python이 fb_gogaek 폴백으로 거래처명 → 업체코드 매핑)
 	myQuery := "INSERT INTO tms_2 (날짜, 시간, 업체, 입고지, 비고, 픽업, 진행, 배송자, ID, 전화번호, 상태) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', NULL, '주문', NULL, " . et_pk . ", '" . 전화번호_safe . "', 'A');"
 	result := dbQuery(myDB, myQuery)
 	if(errorCheck(result)){
@@ -4084,7 +4105,7 @@ image_backup := ""
 	}
 
 	EnvSet, PATH, %A_EnvPath%;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\Scripts\
-	Run, python "C:\Users\shwoodnew\tms_new\send_purchase_fcm.py"
+	Run, python "C:\Users\shwoodnew\tms_new\send_purchase_fcm.py" %et_pk%
 
 	run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
 
@@ -4289,7 +4310,7 @@ image_backup := ""
 	}
 
 	EnvSet, PATH, %A_EnvPath%;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\;C:\Users\shwoodnew\AppData\Local\Programs\Python\Python313\Scripts\
-	Run, python "C:\Users\shwoodnew\tms_new\send_purchase_fcm.py"
+	Run, python "C:\Users\shwoodnew\tms_new\send_purchase_fcm.py" %ct_pk%
 
 	run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
 
