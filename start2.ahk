@@ -1078,7 +1078,7 @@ xl.Range("P11:P46").Select
 xl.Selection.NumberFormat := "#,##0"
 
 셀 := 11
-Loop
+Loop, 1000  ; 안전 상한 (정상 데이터는 11~46행, 1000 도달 시 비정상)
 {
 	복사 = B%셀%
 	var := xl.Range(복사).value

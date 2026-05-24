@@ -2408,9 +2408,12 @@ else
 	; ===== TfmChitSale 매출 → Firebird CHITTOP(매출)/CHIT → tms/tms_list INSERT =====
 	; fr3/Excel export 우회. 실시간 데이터.
 
+	global g_calendarLockTime
+	g_calendarLockTime := A_TickCount  ; keepalive 차단 (10분 자동 해제)
 	; MySQL 연결 health check (오랜만에 사용 시 wait_timeout 끊김 대비)
 	if (!EnsureMySQLConnection())
 	{
+		g_calendarLockTime := 0
 		MsgBox, 16, MySQL 재연결 실패, MySQL 서버에 재연결할 수 없습니다.`nAHK 재시작이 필요합니다.
 		return
 	}
@@ -2465,7 +2468,9 @@ else
 	catch e
 	{
 		MsgBox, 16, CT_PK 조회 실패, % "SQL:`n" sqlCt "`n`n에러: " e.Message
+		try rs.Close()
 		fbConn.Close()
+		g_calendarLockTime := 0
 		return
 	}
 
@@ -2516,7 +2521,9 @@ else
 	catch e
 	{
 		MsgBox, 16, CHIT 조회 실패, % "SQL:`n" sqlChit "`n`n에러: " e.Message
+		try rs.Close()
 		fbConn.Close()
+		g_calendarLockTime := 0
 		return
 	}
 
@@ -2642,6 +2649,7 @@ else
 	tmsCnt := IsObject(verifyTms) ? verifyTms[1][1] : "?"
 	tms2Cnt := IsObject(verifyTms2) ? verifyTms2[1][1] : "?"
 	listCnt := IsObject(verifyList) ? verifyList[1][1] : "?"
+	g_calendarLockTime := 0  ; keepalive 차단 해제
 	MsgBox, 64, 캘린더 (매출) 완료, % "CT_PK = " ct_pk "`n예상: " rowCount " 행`ntms: " tmsCnt " / tms_2: " tms2Cnt " / tms_list: " listCnt, 3
 
 }
@@ -2814,8 +2822,12 @@ ToolTip
 return
 
 ; 5분마다 MySQL ping (SELECT 1만) → 끊겼으면 자동 재연결
+; 캘린더 실행 중(최대 10분)이면 skip (race condition 방지)
 MySQLKeepAlive:
 {
+	global g_calendarLockTime
+	if (g_calendarLockTime > 0 && (A_TickCount - g_calendarLockTime) < 600000)
+		return
 	EnsureMySQLConnection()
 }
 return
@@ -2828,9 +2840,12 @@ return
 	; ===== 캘린더2 — TfmChitSale 매출 → Firebird CHITTOP(매출)/CHIT → tms/tms_list INSERT =====
 	; 캘린더와 동일 패턴. 핀해서 같이 쓸 가능성 때문에 별도 라벨 유지.
 
+	global g_calendarLockTime
+	g_calendarLockTime := A_TickCount  ; keepalive 차단 (10분 자동 해제)
 	; MySQL 연결 health check (오랜만에 사용 시 wait_timeout 끊김 대비)
 	if (!EnsureMySQLConnection())
 	{
+		g_calendarLockTime := 0
 		MsgBox, 16, MySQL 재연결 실패, MySQL 서버에 재연결할 수 없습니다.`nAHK 재시작이 필요합니다.
 		return
 	}
@@ -2885,7 +2900,9 @@ return
 	catch e
 	{
 		MsgBox, 16, CT_PK 조회 실패, % "SQL:`n" sqlCt "`n`n에러: " e.Message
+		try rs.Close()
 		fbConn.Close()
+		g_calendarLockTime := 0
 		return
 	}
 
@@ -2933,7 +2950,9 @@ return
 	catch e
 	{
 		MsgBox, 16, CHIT 조회 실패, % "SQL:`n" sqlChit "`n`n에러: " e.Message
+		try rs.Close()
 		fbConn.Close()
+		g_calendarLockTime := 0
 		return
 	}
 
@@ -3048,6 +3067,7 @@ return
 	tmsCnt := IsObject(verifyTms) ? verifyTms[1][1] : "?"
 	tms2Cnt := IsObject(verifyTms2) ? verifyTms2[1][1] : "?"
 	listCnt := IsObject(verifyList) ? verifyList[1][1] : "?"
+	g_calendarLockTime := 0  ; keepalive 차단 해제
 	MsgBox, 64, 캘린더2 (매출) 완료, % "CT_PK = " ct_pk "`n예상: " rowCount " 행`ntms: " tmsCnt " / tms_2: " tms2Cnt " / tms_list: " listCnt, 3
 
 	return
@@ -4013,7 +4033,9 @@ image_backup := ""
 	catch e
 	{
 		MsgBox, 16, ET_PK 조회 실패, % "SQL:`n" sqlEt "`n`n에러: " e.Message
+		try rs.Close()
 		fbConn.Close()
+		g_calendarLockTime := 0
 		return
 	}
 
@@ -4040,7 +4062,9 @@ image_backup := ""
 	catch e
 	{
 		MsgBox, 16, ESTIMATE 조회 실패, % "SQL:`n" sqlEst "`n`n에러: " e.Message
+		try rs.Close()
 		fbConn.Close()
+		g_calendarLockTime := 0
 		return
 	}
 
@@ -4146,6 +4170,7 @@ image_backup := ""
 	tmsCnt := IsObject(verifyTms) ? verifyTms[1][1] : "?"
 	tms2Cnt := IsObject(verifyTms2) ? verifyTms2[1][1] : "?"
 	listCnt := IsObject(verifyList) ? verifyList[1][1] : "?"
+	g_calendarLockTime := 0  ; keepalive 차단 해제
 	MsgBox, 64, 캘린더3 (발주) 완료, % "ET_PK = " et_pk "`n예상: " rowCount " 행`ntms: " tmsCnt " / tms_2: " tms2Cnt " / tms_list: " listCnt, 3
 
 	return
@@ -4357,6 +4382,7 @@ image_backup := ""
 	tmsCnt := IsObject(verifyTms) ? verifyTms[1][1] : "?"
 	tms2Cnt := IsObject(verifyTms2) ? verifyTms2[1][1] : "?"
 	listCnt := IsObject(verifyList) ? verifyList[1][1] : "?"
+	g_calendarLockTime := 0  ; keepalive 차단 해제
 	MsgBox, 64, 캘린더4 (매입) 완료, % "CT_PK = " ct_pk "`n예상: " rowCount " 행`ntms: " tmsCnt " / tms_2: " tms2Cnt " / tms_list: " listCnt, 3
 
 	return
