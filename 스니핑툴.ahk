@@ -330,7 +330,7 @@ SCW_SetUp(Options="") {
       }
    }
 
-   SCW_Default(StartAfter,80), SCW_Default(MaxGuis,20)
+   SCW_Default(StartAfter,79), SCW_Default(MaxGuis,20) ; AHK v1 Gui 번호는 1~99만 허용 → 80+20=100 방지
    SCW_Default(AutoMonitorWM_LBUTTONDOWN,1), SCW_Default(DrawCloseButton,0)
    SCW_Default(BorderBColor,"FF181818") ; Set Border Color Here (hex8 with no #). The First Color vlaue sets the outline and the Second Color value sets the inner border. Black: FF181818, White: FFFFFFFF. For thin border style remove the first border altogether (i.e. 'SCW_Default(BorderAColor,"Colorcode")' ). For thicker border style add 'SCW_Default(BorderAColor,"FF181818"),' before BorderBColor
 
