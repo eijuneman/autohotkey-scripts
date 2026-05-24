@@ -2405,6 +2405,13 @@ else
 	; ===== TfmChitSale 매출 → Firebird CHITTOP(매출)/CHIT → tms/tms_list INSERT =====
 	; fr3/Excel export 우회. 실시간 데이터.
 
+	; MySQL 연결 health check (오랜만에 사용 시 wait_timeout 끊김 대비)
+	if (!EnsureMySQLConnection())
+	{
+		MsgBox, 16, MySQL 재연결 실패, MySQL 서버에 재연결할 수 없습니다.`nAHK 재시작이 필요합니다.
+		return
+	}
+
 	; 폼 F5 저장 강제 (Firebird commit 대기)
 	ControlSend, , {F5}, ahk_class TfmChitSale
 	Sleep, 500
@@ -2810,6 +2817,13 @@ return
 {
 	; ===== 캘린더2 — TfmChitSale 매출 → Firebird CHITTOP(매출)/CHIT → tms/tms_list INSERT =====
 	; 캘린더와 동일 패턴. 핀해서 같이 쓸 가능성 때문에 별도 라벨 유지.
+
+	; MySQL 연결 health check (오랜만에 사용 시 wait_timeout 끊김 대비)
+	if (!EnsureMySQLConnection())
+	{
+		MsgBox, 16, MySQL 재연결 실패, MySQL 서버에 재연결할 수 없습니다.`nAHK 재시작이 필요합니다.
+		return
+	}
 
 	; 폼 F5 저장 강제 (Firebird commit 대기)
 	ControlSend, , {F5}, ahk_class TfmChitSale
@@ -3935,6 +3949,12 @@ image_backup := ""
 	; ===== TfmEstimate2 → Firebird ESTIMATETOP/ESTIMATE → tms_2/tms_list INSERT =====
 	; fr3/Excel export 우회. 실시간 데이터.
 
+	if (!EnsureMySQLConnection())
+	{
+		MsgBox, 16, MySQL 재연결 실패, MySQL 서버에 재연결할 수 없습니다.`nAHK 재시작이 필요합니다.
+		return
+	}
+
 	; 폼 F5 저장 강제 (Firebird commit 대기)
 	ControlSend, , {F5}, ahk_class TfmEstimate2
 	Sleep, 500
@@ -4128,6 +4148,12 @@ image_backup := ""
 {
 	; ===== TfmChitBuy → Firebird 직접 조회 → tms_2/tms_list INSERT =====
 	; fr3/Excel export 우회. 실시간 데이터 (MySQL fb_* 미러는 5분 lag).
+
+	if (!EnsureMySQLConnection())
+	{
+		MsgBox, 16, MySQL 재연결 실패, MySQL 서버에 재연결할 수 없습니다.`nAHK 재시작이 필요합니다.
+		return
+	}
 
 	; 폼 F5 저장 강제 (Firebird commit 대기)
 	ControlSend, , {F5}, ahk_class TfmChitBuy
@@ -4338,6 +4364,21 @@ image_backup := ""
 
 RemoveDecimal(Number) {
     return Floor(Number)
+}
+
+; MySQL 연결 health check + 끊겼으면 재연결. true=정상, false=재연결 실패.
+EnsureMySQLConnection() {
+    global myDB, host, user, pw, database
+    pingResult := dbQuery(myDB, "SELECT 1;")
+    if (!errorCheck(pingResult))
+        return true
+    ; 연결 깨짐 → 재연결
+    try dbDisConnect(myDB)
+    myDB := dbConnect(host, user, pw, database)
+    if (myDB = "error" || myDB = "")
+        return false
+    dbQuery(myDB, "set character set euckr")
+    return true
 }
 
 ; Firebird ODBC 연결 객체 반환. 실패 시 "" 반환 + MsgBox.
