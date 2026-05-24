@@ -1341,15 +1341,21 @@ timer0:
 		}
 		else
 		{
-			control, disable, , TRzBitBtn8, ahk_class TfmChitSale
-			Sleep, 10
-			;~ run, %A_Desktop%\오토핫키2\s누르기2.ahk,, Hide
-			RunHidden("C:\Users\shwoodnew\Desktop\오토핫키2\s누르기2.ahk")
-			;~ WinWait, s누르기2
-			;~ WinActivate, ahk_class TfmChitSale
-			;~ Sleep, 1500
-
-			Sleep, 50
+			; Run cool-down 30초: 한 번 RunHidden 후 30초 동안 추가 spawn 차단
+			; (윈도우 생성 지연 시 timer0(500ms)이 분당 120개 프로세스 생성 방지)
+			global g_sScriptLaunchTime
+			if (g_sScriptLaunchTime > 0 && (A_TickCount - g_sScriptLaunchTime) < 30000)
+			{
+				Sleep, 50
+			}
+			else
+			{
+				control, disable, , TRzBitBtn8, ahk_class TfmChitSale
+				Sleep, 10
+				RunHidden("C:\Users\shwoodnew\Desktop\오토핫키2\s누르기2.ahk")
+				g_sScriptLaunchTime := A_TickCount
+				Sleep, 50
+			}
 		}
 	}
 	else
