@@ -2583,20 +2583,7 @@ else
 	if (배송날짜_only = "")
 		배송날짜_only := 배송날짜1
 
-	; DELETE 전에 기존 image / order_image 보존 (출고사진 유지)
-	oldImage := "NULL"
-	oldOrderImage := "NULL"
-	imgResult := dbQuery(myDB, "SELECT image, order_image FROM tms WHERE ID = '" . ct_pk . "';")
-	if (IsObject(imgResult) && imgResult.MaxIndex() > 0)
-	{
-		if (imgResult[1][1] != "")
-			oldImage := "'" . StrReplace(imgResult[1][1], "'", "''") . "'"
-		if (imgResult[1][2] != "")
-			oldOrderImage := "'" . StrReplace(imgResult[1][2], "'", "''") . "'"
-	}
-
-	; 매출↔매입 전환 시 반대 테이블 row가 남지 않도록 양쪽 모두 DELETE
-	dbQuery(myDB, "DELETE FROM tms WHERE ID = '" . ct_pk . "';")
+	; 매출↔매입 전환 시 반대 테이블 row만 cleanup (자기 테이블은 UPSERT로 보존)
 	dbQuery(myDB, "DELETE FROM tms_2 WHERE ID = '" . ct_pk . "';")
 
 	배송날짜_safe := StrReplace(배송날짜_only, "'", "''")
@@ -2608,7 +2595,8 @@ else
 	전화번호_safe := StrReplace(전화번호, "'", "''")
 
 	업체코드_val := (g_pk && g_pk != "") ? g_pk : "NULL"
-	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", " . 업체코드_val . ", " . oldImage . ", " . oldOrderImage . ");"
+	; UPSERT: 기존 row면 변경된 컬럼만 UPDATE (도어/배송자/image/order_image 보존), 상태는 항상 'Y'
+	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", " . 업체코드_val . ", NULL, NULL) ON DUPLICATE KEY UPDATE 날짜 = VALUES(날짜), 시간 = VALUES(시간), 업체 = VALUES(업체), 출고지 = VALUES(출고지), 비고 = VALUES(비고), 절단 = VALUES(절단), 전화번호 = VALUES(전화번호), 상태 = 'Y', 총금액 = VALUES(총금액), 입금액 = VALUES(입금액), 업체코드 = VALUES(업체코드);"
 	result := dbQuery(myDB, myQuery)
 	if(errorCheck(result)){
 		MsgBox, % "tms INSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
@@ -3011,20 +2999,7 @@ return
 	if (배송날짜_only = "")
 		배송날짜_only := 배송날짜1
 
-	; DELETE 전에 기존 image / order_image 보존 (출고사진 유지)
-	oldImage := "NULL"
-	oldOrderImage := "NULL"
-	imgResult := dbQuery(myDB, "SELECT image, order_image FROM tms WHERE ID = '" . ct_pk . "';")
-	if (IsObject(imgResult) && imgResult.MaxIndex() > 0)
-	{
-		if (imgResult[1][1] != "")
-			oldImage := "'" . StrReplace(imgResult[1][1], "'", "''") . "'"
-		if (imgResult[1][2] != "")
-			oldOrderImage := "'" . StrReplace(imgResult[1][2], "'", "''") . "'"
-	}
-
-	; 매출↔매입 전환 시 반대 테이블 row가 남지 않도록 양쪽 모두 DELETE
-	dbQuery(myDB, "DELETE FROM tms WHERE ID = '" . ct_pk . "';")
+	; 매출↔매입 전환 시 반대 테이블 row만 cleanup (자기 테이블은 UPSERT로 보존)
 	dbQuery(myDB, "DELETE FROM tms_2 WHERE ID = '" . ct_pk . "';")
 
 	배송날짜_safe := StrReplace(배송날짜_only, "'", "''")
@@ -3036,7 +3011,8 @@ return
 	전화번호_safe := StrReplace(전화번호, "'", "''")
 
 	업체코드_val := (g_pk && g_pk != "") ? g_pk : "NULL"
-	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", " . 업체코드_val . ", " . oldImage . ", " . oldOrderImage . ");"
+	; UPSERT: 기존 row면 변경된 컬럼만 UPDATE (도어/배송자/image/order_image 보존), 상태는 항상 'Y'
+	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", " . 업체코드_val . ", NULL, NULL) ON DUPLICATE KEY UPDATE 날짜 = VALUES(날짜), 시간 = VALUES(시간), 업체 = VALUES(업체), 출고지 = VALUES(출고지), 비고 = VALUES(비고), 절단 = VALUES(절단), 전화번호 = VALUES(전화번호), 상태 = 'Y', 총금액 = VALUES(총금액), 입금액 = VALUES(입금액), 업체코드 = VALUES(업체코드);"
 	result := dbQuery(myDB, myQuery)
 	if(errorCheck(result)){
 		MsgBox, % "tms INSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
@@ -4124,9 +4100,8 @@ image_backup := ""
 	if (배송날짜_only = "")
 		배송날짜_only := 배송날짜1
 
-	; 주문↔매출↔매입 전환 시 반대 테이블 row가 남지 않도록 양쪽 모두 DELETE
+	; 매출 테이블만 cross cleanup (tms_2는 UPSERT로 보존)
 	dbQuery(myDB, "DELETE FROM tms WHERE ID = '" . et_pk . "';")
-	dbQuery(myDB, "DELETE FROM tms_2 WHERE ID = '" . et_pk . "';")
 
 	배송날짜_safe := StrReplace(배송날짜_only, "'", "''")
 	출발시각1_safe := StrReplace(출발시각1, "'", "''")
@@ -4135,9 +4110,8 @@ image_backup := ""
 	기타메모1_safe := StrReplace(기타메모1, "'", "''")
 	전화번호_safe := StrReplace(전화번호, "'", "''")
 
-	; tms_2 에 업체코드 컬럼이 없으므로 헤더에 G_PK 직접 INSERT 못 함
-	; (Python이 fb_gogaek 폴백으로 거래처명 → 업체코드 매핑)
-	myQuery := "INSERT INTO tms_2 (날짜, 시간, 업체, 입고지, 비고, 픽업, 진행, 배송자, ID, 전화번호, 상태) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', NULL, '주문', NULL, " . et_pk . ", '" . 전화번호_safe . "', 'A');"
+	; UPSERT: 기존 row면 변경된 컬럼만 UPDATE (픽업/배송자 보존), 상태='A' 진행='주문' 강제
+	myQuery := "INSERT INTO tms_2 (날짜, 시간, 업체, 입고지, 비고, 픽업, 진행, 배송자, ID, 전화번호, 상태) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', NULL, '주문', NULL, " . et_pk . ", '" . 전화번호_safe . "', 'A') ON DUPLICATE KEY UPDATE 날짜 = VALUES(날짜), 시간 = VALUES(시간), 업체 = VALUES(업체), 입고지 = VALUES(입고지), 비고 = VALUES(비고), 전화번호 = VALUES(전화번호), 진행 = '주문', 상태 = 'A';"
 	result := dbQuery(myDB, myQuery)
 	if(errorCheck(result)){
 		MsgBox, % "tms_2 INSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
@@ -4337,9 +4311,8 @@ image_backup := ""
 	if (배송날짜_only = "")
 		배송날짜_only := 배송날짜
 
-	; 매입↔매출↔주문 전환 시 반대 테이블 row가 남지 않도록 양쪽 모두 DELETE
+	; 매출 테이블만 cross cleanup (tms_2는 UPSERT로 보존)
 	dbQuery(myDB, "DELETE FROM tms WHERE ID = '" . ct_pk . "';")
-	dbQuery(myDB, "DELETE FROM tms_2 WHERE ID = '" . ct_pk . "';")
 
 	배송날짜_safe := StrReplace(배송날짜_only, "'", "''")
 	출발시각1_safe := StrReplace(출발시각1, "'", "''")
@@ -4348,7 +4321,8 @@ image_backup := ""
 	기타메모1_safe := StrReplace(기타메모1, "'", "''")
 	전화번호_safe := StrReplace(전화번호, "'", "''")
 
-	myQuery := "INSERT INTO tms_2 (날짜, 시간, 업체, 입고지, 비고, 픽업, 진행, 배송자, ID, 전화번호, 상태) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', NULL, '매입', NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'A');"
+	; UPSERT: 기존 row면 변경된 컬럼만 UPDATE (픽업/배송자 보존), 상태='A' 진행='매입' 강제
+	myQuery := "INSERT INTO tms_2 (날짜, 시간, 업체, 입고지, 비고, 픽업, 진행, 배송자, ID, 전화번호, 상태) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', NULL, '매입', NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'A') ON DUPLICATE KEY UPDATE 날짜 = VALUES(날짜), 시간 = VALUES(시간), 업체 = VALUES(업체), 입고지 = VALUES(입고지), 비고 = VALUES(비고), 전화번호 = VALUES(전화번호), 진행 = '매입', 상태 = 'A';"
 	result := dbQuery(myDB, myQuery)
 	if(errorCheck(result)){
 		MsgBox, % "tms_2 INSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
