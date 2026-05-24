@@ -2583,6 +2583,18 @@ else
 	if (배송날짜_only = "")
 		배송날짜_only := 배송날짜1
 
+	; DELETE 전에 기존 image / order_image 보존 (출고사진 유지)
+	oldImage := "NULL"
+	oldOrderImage := "NULL"
+	imgResult := dbQuery(myDB, "SELECT image, order_image FROM tms WHERE ID = '" . ct_pk . "';")
+	if (IsObject(imgResult) && imgResult.MaxIndex() > 0)
+	{
+		if (imgResult[1][1] != "")
+			oldImage := "'" . StrReplace(imgResult[1][1], "'", "''") . "'"
+		if (imgResult[1][2] != "")
+			oldOrderImage := "'" . StrReplace(imgResult[1][2], "'", "''") . "'"
+	}
+
 	; 매출↔매입 전환 시 반대 테이블 row가 남지 않도록 양쪽 모두 DELETE
 	dbQuery(myDB, "DELETE FROM tms WHERE ID = '" . ct_pk . "';")
 	dbQuery(myDB, "DELETE FROM tms_2 WHERE ID = '" . ct_pk . "';")
@@ -2596,7 +2608,7 @@ else
 	전화번호_safe := StrReplace(전화번호, "'", "''")
 
 	업체코드_val := (g_pk && g_pk != "") ? g_pk : "NULL"
-	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", " . 업체코드_val . ", NULL, NULL);"
+	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", " . 업체코드_val . ", " . oldImage . ", " . oldOrderImage . ");"
 	result := dbQuery(myDB, myQuery)
 	if(errorCheck(result)){
 		MsgBox, % "tms INSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
@@ -2999,6 +3011,18 @@ return
 	if (배송날짜_only = "")
 		배송날짜_only := 배송날짜1
 
+	; DELETE 전에 기존 image / order_image 보존 (출고사진 유지)
+	oldImage := "NULL"
+	oldOrderImage := "NULL"
+	imgResult := dbQuery(myDB, "SELECT image, order_image FROM tms WHERE ID = '" . ct_pk . "';")
+	if (IsObject(imgResult) && imgResult.MaxIndex() > 0)
+	{
+		if (imgResult[1][1] != "")
+			oldImage := "'" . StrReplace(imgResult[1][1], "'", "''") . "'"
+		if (imgResult[1][2] != "")
+			oldOrderImage := "'" . StrReplace(imgResult[1][2], "'", "''") . "'"
+	}
+
 	; 매출↔매입 전환 시 반대 테이블 row가 남지 않도록 양쪽 모두 DELETE
 	dbQuery(myDB, "DELETE FROM tms WHERE ID = '" . ct_pk . "';")
 	dbQuery(myDB, "DELETE FROM tms_2 WHERE ID = '" . ct_pk . "';")
@@ -3012,7 +3036,7 @@ return
 	전화번호_safe := StrReplace(전화번호, "'", "''")
 
 	업체코드_val := (g_pk && g_pk != "") ? g_pk : "NULL"
-	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", " . 업체코드_val . ", NULL, NULL);"
+	myQuery := "INSERT INTO tms (날짜, 시간, 업체, 출고지, 비고, 절단, 도어, 배송자, ID, 전화번호, 상태, 총금액, 입금액, 업체코드, image, order_image) VALUES ('" . 배송날짜_safe . "', '" . 출발시각1_safe . "', '" . 거래처명1_safe . "', '" . 배송지1_safe . "', '" . 기타메모1_safe . "', '" . 재단여부_safe . "', NULL, NULL, " . ct_pk . ", '" . 전화번호_safe . "', 'Y', " . 총금액 . ", " . 입금액 . ", " . 업체코드_val . ", " . oldImage . ", " . oldOrderImage . ");"
 	result := dbQuery(myDB, myQuery)
 	if(errorCheck(result)){
 		MsgBox, % "tms INSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
