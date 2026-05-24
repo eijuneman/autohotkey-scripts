@@ -311,6 +311,9 @@ GuiControl, disable, 완료조합2
 
 ; 매출전표/견적서 창 종료 감시: 창이 사라지면 Edit/DropDownList 초기화
 SetTimer, WatchSourceWindows, 500
+
+; MySQL 연결 유지: 5분마다 ping → 끊겼으면 자동 재연결 (wait_timeout 대비)
+SetTimer, MySQLKeepAlive, 300000
 ;~ WinActivate, ahk_exe JedaeroM.exe
 ;~ SoundBeep, 100, 10
 ;~ SoundBeep, 100, 10
@@ -2808,6 +2811,13 @@ return
 
 RemoveCalToolTip:
 ToolTip
+return
+
+; 5분마다 MySQL ping (SELECT 1만) → 끊겼으면 자동 재연결
+MySQLKeepAlive:
+{
+	EnsureMySQLConnection()
+}
 return
 
 
