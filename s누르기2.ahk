@@ -2460,8 +2460,14 @@ else
 	if (ct_date_clean = "")
 		ct_date_clean := ct_date_raw
 
-	safeName := StrReplace(g_name_clean, "'", "''")
-	sqlCt := "SELECT FIRST 1 CT_PK FROM CHITTOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE '" . safeName . "%' AND CT_DATE = '" . ct_date_clean . "' AND CAST(CT_GUBUN AS VARCHAR(10) CHARACTER SET KSC_5601) = '매출' ORDER BY CT_PK DESC"
+	safeName := g_name_clean
+	; 동일 거래처+날짜 다건 구분: 폼 CT_TIME(출발시각, 자유텍스트)로 정확 매칭. CHAR(8)이라 TRIM 필수.
+	ct_time_clean := Trim(ct_time_raw)
+	sqlCtBase := "SELECT FIRST 1 CT_PK FROM CHITTOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE " . KscHex(safeName) . " || '%' AND CT_DATE = '" . ct_date_clean . "' AND CAST(CT_GUBUN AS VARCHAR(10) CHARACTER SET KSC_5601) = _KSC_5601 X'B8C5C3E2'"
+	if (ct_time_clean != "")
+		sqlCt := sqlCtBase . " AND TRIM(CAST(CT_TIME AS VARCHAR(40) CHARACTER SET KSC_5601)) = " . KscHex(ct_time_clean) . " ORDER BY CT_PK DESC"
+	else
+		sqlCt := sqlCtBase . " ORDER BY CT_PK DESC"
 
 	try
 		rs := fbConn.Execute(sqlCt)
@@ -2472,6 +2478,14 @@ else
 		fbConn.Close()
 		g_calendarLockTime := 0
 		return
+	}
+
+	; CT_TIME 정확매칭 0건이면 CT_TIME 조건 제거하고 재조회 → 최악도 기존 동작과 동일(무회귀)
+	if (rs.EOF && ct_time_clean != "")
+	{
+		rs.Close()
+		sqlCt := sqlCtBase . " ORDER BY CT_PK DESC"
+		rs := fbConn.Execute(sqlCt)
 	}
 
 	if rs.EOF
@@ -2514,7 +2528,23 @@ else
 	if (입금액 = "")
 		입금액 := 0
 
-	sqlChit := "SELECT C_PK, J_PK, CAST(J_NAME AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_NAME_K, CAST(J_STANDARD AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_STANDARD_K, C_QTY, C_COST, C_NOT, CAST(J_GITA AS VARCHAR(20) CHARACTER SET KSC_5601) AS J_GITA_K, C_NO FROM CHIT WHERE CT_PK = " . ct_pk . " ORDER BY C_NO"
+	; EXECUTE BLOCK + WHEN ANY DO: J_GITA 등 일부 행이 EUC-KR 멀티바이트 중간 잘림으로
+	; KSC_5601 CAST 실패하는 경우 해당 컬럼만 NULL 처리하고 행은 유지 (TMS firebirdScheduler.js 패턴)
+	; expression mode + string concat (AHK 멀티라인 literal 안의 WHEN 키워드 충돌 우회)
+	sqlChit := ""
+		. "EXECUTE BLOCK RETURNS (C_PK INTEGER, J_PK INTEGER, J_NAME_K VARCHAR(40) CHARACTER SET KSC_5601, J_STANDARD_K VARCHAR(40) CHARACTER SET KSC_5601, C_QTY NUMERIC(18,2), C_COST NUMERIC(18,2), C_NOT NUMERIC(18,2), C_PAY NUMERIC(18,2), J_GITA_K VARCHAR(20) CHARACTER SET KSC_5601, C_NO INTEGER) AS "
+		. "DECLARE V_NAME VARCHAR(200); DECLARE V_STD VARCHAR(200); DECLARE V_GITA VARCHAR(200); "
+		. "BEGIN "
+		. "  FOR SELECT C_PK, J_PK, J_NAME, J_STANDARD, C_QTY, C_COST, C_NOT, C_PAY, J_GITA, C_NO "
+		. "      FROM CHIT WHERE CT_PK = " . ct_pk . " ORDER BY C_NO "
+		. "      INTO :C_PK, :J_PK, :V_NAME, :V_STD, :C_QTY, :C_COST, :C_NOT, :C_PAY, :V_GITA, :C_NO "
+		. "  DO BEGIN "
+		. "    BEGIN J_NAME_K = CAST(:V_NAME AS VARCHAR(40) CHARACTER SET KSC_5601); WHEN ANY DO J_NAME_K = NULL; END "
+		. "    BEGIN J_STANDARD_K = CAST(:V_STD AS VARCHAR(40) CHARACTER SET KSC_5601); WHEN ANY DO J_STANDARD_K = NULL; END "
+		. "    BEGIN J_GITA_K = CAST(:V_GITA AS VARCHAR(20) CHARACTER SET KSC_5601); WHEN ANY DO J_GITA_K = NULL; END "
+		. "    SUSPEND; "
+		. "  END "
+		. "END"
 
 	try
 		rs := fbConn.Execute(sqlChit)
@@ -2539,6 +2569,7 @@ else
 		c_qty := rs.Fields("C_QTY").Value
 		c_cost := rs.Fields("C_COST").Value
 		c_not := rs.Fields("C_NOT").Value
+		c_pay := rs.Fields("C_PAY").Value
 		j_gita := rs.Fields("J_GITA_K").Value
 		c_no := rs.Fields("C_NO").Value
 
@@ -2548,6 +2579,8 @@ else
 			c_cost := 0
 		if (c_not = "")
 			c_not := 0
+		if (c_pay = "")
+			c_pay := 0
 		if (j_pk = "")
 			j_pk := 0
 		if (c_no = "")
@@ -2557,18 +2590,20 @@ else
 			gitaVal := "NULL"
 		else
 		{
-			j_gita_e := StrReplace(j_gita, "'", "''")
+			j_gita_e := StrReplace(j_gita, "\", "\\")
+			j_gita_e := StrReplace(j_gita_e, "'", "''")
 			j_gita_e := StrReplace(j_gita_e, "(", " ")
 			j_gita_e := StrReplace(j_gita_e, ")", " ")
 			gitaVal := "'" . j_gita_e . "'"
 		}
 
 		nameComb := j_name . " / " . j_standard
+		nameComb := StrReplace(nameComb, "\", "\\")
 		nameComb := StrReplace(nameComb, "'", "''")
 
 		if (CONT1 != "")
 			CONT1 .= ",`n"
-		CONT1 .= "(" . ct_pk . ", '" . c_pk . "', NULL, '" . nameComb . "', " . c_qty . ", " . c_cost . ", " . c_not . ", " . j_pk . ", " . gitaVal . ", " . c_no . ")"
+		CONT1 .= "(" . ct_pk . ", '" . c_pk . "', NULL, '" . nameComb . "', " . c_qty . ", " . c_cost . ", " . c_pay . ", " . j_pk . ", " . gitaVal . ", " . c_no . ")"
 		if (pkList != "")
 			pkList .= ","
 		pkList .= "'" . c_pk . "'"
@@ -2892,8 +2927,14 @@ return
 	if (ct_date_clean = "")
 		ct_date_clean := ct_date_raw
 
-	safeName := StrReplace(g_name_clean, "'", "''")
-	sqlCt := "SELECT FIRST 1 CT_PK FROM CHITTOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE '" . safeName . "%' AND CT_DATE = '" . ct_date_clean . "' AND CAST(CT_GUBUN AS VARCHAR(10) CHARACTER SET KSC_5601) = '매출' ORDER BY CT_PK DESC"
+	safeName := g_name_clean
+	; 동일 거래처+날짜 다건 구분: 폼 CT_TIME(출발시각, 자유텍스트)로 정확 매칭. CHAR(8)이라 TRIM 필수.
+	ct_time_clean := Trim(ct_time_raw)
+	sqlCtBase := "SELECT FIRST 1 CT_PK FROM CHITTOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE " . KscHex(safeName) . " || '%' AND CT_DATE = '" . ct_date_clean . "' AND CAST(CT_GUBUN AS VARCHAR(10) CHARACTER SET KSC_5601) = _KSC_5601 X'B8C5C3E2'"
+	if (ct_time_clean != "")
+		sqlCt := sqlCtBase . " AND TRIM(CAST(CT_TIME AS VARCHAR(40) CHARACTER SET KSC_5601)) = " . KscHex(ct_time_clean) . " ORDER BY CT_PK DESC"
+	else
+		sqlCt := sqlCtBase . " ORDER BY CT_PK DESC"
 
 	try
 		rs := fbConn.Execute(sqlCt)
@@ -2904,6 +2945,14 @@ return
 		fbConn.Close()
 		g_calendarLockTime := 0
 		return
+	}
+
+	; CT_TIME 정확매칭 0건이면 CT_TIME 조건 제거하고 재조회 → 최악도 기존 동작과 동일(무회귀)
+	if (rs.EOF && ct_time_clean != "")
+	{
+		rs.Close()
+		sqlCt := sqlCtBase . " ORDER BY CT_PK DESC"
+		rs := fbConn.Execute(sqlCt)
 	}
 
 	if rs.EOF
@@ -2943,7 +2992,23 @@ return
 	if (입금액 = "")
 		입금액 := 0
 
-	sqlChit := "SELECT C_PK, J_PK, CAST(J_NAME AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_NAME_K, CAST(J_STANDARD AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_STANDARD_K, C_QTY, C_COST, C_NOT, CAST(J_GITA AS VARCHAR(20) CHARACTER SET KSC_5601) AS J_GITA_K, C_NO FROM CHIT WHERE CT_PK = " . ct_pk . " ORDER BY C_NO"
+	; EXECUTE BLOCK + WHEN ANY DO: J_GITA 등 일부 행이 EUC-KR 멀티바이트 중간 잘림으로
+	; KSC_5601 CAST 실패하는 경우 해당 컬럼만 NULL 처리하고 행은 유지 (TMS firebirdScheduler.js 패턴)
+	; expression mode + string concat (AHK 멀티라인 literal 안의 WHEN 키워드 충돌 우회)
+	sqlChit := ""
+		. "EXECUTE BLOCK RETURNS (C_PK INTEGER, J_PK INTEGER, J_NAME_K VARCHAR(40) CHARACTER SET KSC_5601, J_STANDARD_K VARCHAR(40) CHARACTER SET KSC_5601, C_QTY NUMERIC(18,2), C_COST NUMERIC(18,2), C_NOT NUMERIC(18,2), C_PAY NUMERIC(18,2), J_GITA_K VARCHAR(20) CHARACTER SET KSC_5601, C_NO INTEGER) AS "
+		. "DECLARE V_NAME VARCHAR(200); DECLARE V_STD VARCHAR(200); DECLARE V_GITA VARCHAR(200); "
+		. "BEGIN "
+		. "  FOR SELECT C_PK, J_PK, J_NAME, J_STANDARD, C_QTY, C_COST, C_NOT, C_PAY, J_GITA, C_NO "
+		. "      FROM CHIT WHERE CT_PK = " . ct_pk . " ORDER BY C_NO "
+		. "      INTO :C_PK, :J_PK, :V_NAME, :V_STD, :C_QTY, :C_COST, :C_NOT, :C_PAY, :V_GITA, :C_NO "
+		. "  DO BEGIN "
+		. "    BEGIN J_NAME_K = CAST(:V_NAME AS VARCHAR(40) CHARACTER SET KSC_5601); WHEN ANY DO J_NAME_K = NULL; END "
+		. "    BEGIN J_STANDARD_K = CAST(:V_STD AS VARCHAR(40) CHARACTER SET KSC_5601); WHEN ANY DO J_STANDARD_K = NULL; END "
+		. "    BEGIN J_GITA_K = CAST(:V_GITA AS VARCHAR(20) CHARACTER SET KSC_5601); WHEN ANY DO J_GITA_K = NULL; END "
+		. "    SUSPEND; "
+		. "  END "
+		. "END"
 
 	try
 		rs := fbConn.Execute(sqlChit)
@@ -2968,6 +3033,7 @@ return
 		c_qty := rs.Fields("C_QTY").Value
 		c_cost := rs.Fields("C_COST").Value
 		c_not := rs.Fields("C_NOT").Value
+		c_pay := rs.Fields("C_PAY").Value
 		j_gita := rs.Fields("J_GITA_K").Value
 		c_no := rs.Fields("C_NO").Value
 
@@ -2977,6 +3043,8 @@ return
 			c_cost := 0
 		if (c_not = "")
 			c_not := 0
+		if (c_pay = "")
+			c_pay := 0
 		if (j_pk = "")
 			j_pk := 0
 		if (c_no = "")
@@ -2986,18 +3054,20 @@ return
 			gitaVal := "NULL"
 		else
 		{
-			j_gita_e := StrReplace(j_gita, "'", "''")
+			j_gita_e := StrReplace(j_gita, "\", "\\")
+			j_gita_e := StrReplace(j_gita_e, "'", "''")
 			j_gita_e := StrReplace(j_gita_e, "(", " ")
 			j_gita_e := StrReplace(j_gita_e, ")", " ")
 			gitaVal := "'" . j_gita_e . "'"
 		}
 
 		nameComb := j_name . " / " . j_standard
+		nameComb := StrReplace(nameComb, "\", "\\")
 		nameComb := StrReplace(nameComb, "'", "''")
 
 		if (CONT1 != "")
 			CONT1 .= ",`n"
-		CONT1 .= "(" . ct_pk . ", '" . c_pk . "', NULL, '" . nameComb . "', " . c_qty . ", " . c_cost . ", " . c_not . ", " . j_pk . ", " . gitaVal . ", " . c_no . ")"
+		CONT1 .= "(" . ct_pk . ", '" . c_pk . "', NULL, '" . nameComb . "', " . c_qty . ", " . c_cost . ", " . c_pay . ", " . j_pk . ", " . gitaVal . ", " . c_no . ")"
 		if (pkList != "")
 			pkList .= ","
 		pkList .= "'" . c_pk . "'"
@@ -4005,6 +4075,9 @@ image_backup := ""
 	ControlGetText, et_date_raw, TRzDBDateTimeEdit1, ahk_class TfmEstimate2
 	ControlGetText, g_name_raw, TRzEdit2, ahk_class TfmEstimate2
 	ControlGetText, et_no_raw, TRzDBEdit1, ahk_class TfmEstimate2
+	; 견적 제목(ET_TITLE, 카트생성 견적은 '#NNNN 카트'로 고유) — 동일 거래처+날짜 다건 구분용.
+	; TRzDBEdit1이 제목인지 1회 확인 권장(배송지/ET_NO는 TRzDBEdit9). 값 없거나 불일치 시 아래 폴백으로 기존 동작 유지.
+	ControlGetText, et_title_raw, TRzDBEdit1, ahk_class TfmEstimate2
 
 	if (g_name_raw = "" or et_date_raw = "")
 	{
@@ -4025,8 +4098,14 @@ image_backup := ""
 	if (et_date_clean = "")
 		et_date_clean := et_date_raw
 
-	safeName := StrReplace(g_name_clean, "'", "''")
-	sqlEt := "SELECT FIRST 1 ET_PK, G_PK FROM ESTIMATETOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE '" . safeName . "%' AND ET_DATE = '" . et_date_clean . "' ORDER BY ET_PK DESC"
+	safeName := g_name_clean
+	; 동일 거래처+날짜 다건 구분: 폼 제목(ET_TITLE, varchar)으로 정확 매칭.
+	et_title_clean := Trim(et_title_raw)
+	sqlEtBase := "SELECT FIRST 1 ET_PK, G_PK FROM ESTIMATETOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE " . KscHex(safeName) . " || '%' AND ET_DATE = '" . et_date_clean . "'"
+	if (et_title_clean != "")
+		sqlEt := sqlEtBase . " AND TRIM(CAST(ET_TITLE AS VARCHAR(80) CHARACTER SET KSC_5601)) = " . KscHex(et_title_clean) . " ORDER BY ET_PK DESC"
+	else
+		sqlEt := sqlEtBase . " ORDER BY ET_PK DESC"
 
 	try
 		rs := fbConn.Execute(sqlEt)
@@ -4037,6 +4116,14 @@ image_backup := ""
 		fbConn.Close()
 		g_calendarLockTime := 0
 		return
+	}
+
+	; ET_TITLE 정확매칭 0건이면 제목 조건 제거하고 재조회 → 최악도 기존 동작과 동일(무회귀)
+	if (rs.EOF && et_title_clean != "")
+	{
+		rs.Close()
+		sqlEt := sqlEtBase . " ORDER BY ET_PK DESC"
+		rs := fbConn.Execute(sqlEt)
 	}
 
 	if rs.EOF
@@ -4055,7 +4142,20 @@ image_backup := ""
 		g_pk := 0
 	rs.Close()
 
-	sqlEst := "SELECT E_PK, J_PK, CAST(J_NAME AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_NAME_K, CAST(J_STANDARD AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_STANDARD_K, E_QTY, CAST(J_GITA AS VARCHAR(20) CHARACTER SET KSC_5601) AS J_GITA_K, E_NO FROM ESTIMATE WHERE ET_PK = " . et_pk . " ORDER BY E_NO"
+	sqlEst := ""
+		. "EXECUTE BLOCK RETURNS (E_PK INTEGER, J_PK INTEGER, J_NAME_K VARCHAR(40) CHARACTER SET KSC_5601, J_STANDARD_K VARCHAR(40) CHARACTER SET KSC_5601, E_QTY NUMERIC(18,2), J_GITA_K VARCHAR(20) CHARACTER SET KSC_5601, E_NO INTEGER) AS "
+		. "DECLARE V_NAME VARCHAR(200); DECLARE V_STD VARCHAR(200); DECLARE V_GITA VARCHAR(200); "
+		. "BEGIN "
+		. "  FOR SELECT E_PK, J_PK, J_NAME, J_STANDARD, E_QTY, J_GITA, E_NO "
+		. "      FROM ESTIMATE WHERE ET_PK = " . et_pk . " ORDER BY E_NO "
+		. "      INTO :E_PK, :J_PK, :V_NAME, :V_STD, :E_QTY, :V_GITA, :E_NO "
+		. "  DO BEGIN "
+		. "    BEGIN J_NAME_K = CAST(:V_NAME AS VARCHAR(40) CHARACTER SET KSC_5601); WHEN ANY DO J_NAME_K = NULL; END "
+		. "    BEGIN J_STANDARD_K = CAST(:V_STD AS VARCHAR(40) CHARACTER SET KSC_5601); WHEN ANY DO J_STANDARD_K = NULL; END "
+		. "    BEGIN J_GITA_K = CAST(:V_GITA AS VARCHAR(20) CHARACTER SET KSC_5601); WHEN ANY DO J_GITA_K = NULL; END "
+		. "    SUSPEND; "
+		. "  END "
+		. "END"
 
 	try
 		rs := fbConn.Execute(sqlEst)
@@ -4092,13 +4192,15 @@ image_backup := ""
 			gitaVal := "NULL"
 		else
 		{
-			j_gita_e := StrReplace(j_gita, "'", "''")
+			j_gita_e := StrReplace(j_gita, "\", "\\")
+			j_gita_e := StrReplace(j_gita_e, "'", "''")
 			j_gita_e := StrReplace(j_gita_e, "(", " ")
 			j_gita_e := StrReplace(j_gita_e, ")", " ")
 			gitaVal := "'" . j_gita_e . "'"
 		}
 
 		nameComb := j_name . " / " . j_standard
+		nameComb := StrReplace(nameComb, "\", "\\")
 		nameComb := StrReplace(nameComb, "'", "''")
 
 		if (CONT1 != "")
@@ -4242,8 +4344,14 @@ image_backup := ""
 	if (ct_date_clean = "")
 		ct_date_clean := ct_date_raw
 
-	safeName := StrReplace(g_name_clean, "'", "''")
-	sqlCt := "SELECT FIRST 1 CT_PK FROM CHITTOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE '" . safeName . "%' AND CT_DATE = '" . ct_date_clean . "' AND CAST(CT_GUBUN AS VARCHAR(10) CHARACTER SET KSC_5601) = '매입' ORDER BY CT_PK DESC"
+	safeName := g_name_clean
+	; 동일 거래처+날짜 다건 구분: 폼 CT_TIME(출발시각, 자유텍스트)로 정확 매칭. CHAR(8)이라 TRIM 필수.
+	ct_time_clean := Trim(ct_time_raw)
+	sqlCtBase := "SELECT FIRST 1 CT_PK FROM CHITTOP WHERE CAST(G_NAME AS VARCHAR(80) CHARACTER SET KSC_5601) LIKE " . KscHex(safeName) . " || '%' AND CT_DATE = '" . ct_date_clean . "' AND CAST(CT_GUBUN AS VARCHAR(10) CHARACTER SET KSC_5601) = _KSC_5601 X'B8C5C0D4'"
+	if (ct_time_clean != "")
+		sqlCt := sqlCtBase . " AND TRIM(CAST(CT_TIME AS VARCHAR(40) CHARACTER SET KSC_5601)) = " . KscHex(ct_time_clean) . " ORDER BY CT_PK DESC"
+	else
+		sqlCt := sqlCtBase . " ORDER BY CT_PK DESC"
 
 	try
 	{
@@ -4254,6 +4362,14 @@ image_backup := ""
 		MsgBox, 16, CT_PK 조회 실패, % "SQL:`n" sqlCt "`n`n에러: " e.Message
 		fbConn.Close()
 		return
+	}
+
+	; CT_TIME 정확매칭 0건이면 CT_TIME 조건 제거하고 재조회 → 최악도 기존 동작과 동일(무회귀)
+	if (rs.EOF && ct_time_clean != "")
+	{
+		rs.Close()
+		sqlCt := sqlCtBase . " ORDER BY CT_PK DESC"
+		rs := fbConn.Execute(sqlCt)
 	}
 
 	if rs.EOF
@@ -4267,7 +4383,22 @@ image_backup := ""
 	ct_pk := rs.Fields("CT_PK").Value
 	rs.Close()
 
-	sqlChit := "SELECT C_PK, J_PK, CAST(J_NAME AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_NAME_K, CAST(J_STANDARD AS VARCHAR(40) CHARACTER SET KSC_5601) AS J_STANDARD_K, C_QTY, CAST(J_GITA AS VARCHAR(20) CHARACTER SET KSC_5601) AS J_GITA_K, C_NO FROM CHIT WHERE CT_PK = " . ct_pk . " ORDER BY C_NO"
+	; EXECUTE BLOCK + WHEN ANY DO: J_GITA 등 일부 행이 EUC-KR 멀티바이트 중간 잘림으로
+	; KSC_5601 CAST 실패하는 경우 해당 컬럼만 NULL 처리하고 행은 유지 (TMS firebirdScheduler.js 패턴)
+	sqlChit := ""
+		. "EXECUTE BLOCK RETURNS (C_PK INTEGER, J_PK INTEGER, J_NAME_K VARCHAR(40) CHARACTER SET KSC_5601, J_STANDARD_K VARCHAR(40) CHARACTER SET KSC_5601, C_QTY NUMERIC(18,2), J_GITA_K VARCHAR(20) CHARACTER SET KSC_5601, C_NO INTEGER) AS "
+		. "DECLARE V_NAME VARCHAR(200); DECLARE V_STD VARCHAR(200); DECLARE V_GITA VARCHAR(200); "
+		. "BEGIN "
+		. "  FOR SELECT C_PK, J_PK, J_NAME, J_STANDARD, C_QTY, J_GITA, C_NO "
+		. "      FROM CHIT WHERE CT_PK = " . ct_pk . " ORDER BY C_NO "
+		. "      INTO :C_PK, :J_PK, :V_NAME, :V_STD, :C_QTY, :V_GITA, :C_NO "
+		. "  DO BEGIN "
+		. "    BEGIN J_NAME_K = CAST(:V_NAME AS VARCHAR(40) CHARACTER SET KSC_5601); WHEN ANY DO J_NAME_K = NULL; END "
+		. "    BEGIN J_STANDARD_K = CAST(:V_STD AS VARCHAR(40) CHARACTER SET KSC_5601); WHEN ANY DO J_STANDARD_K = NULL; END "
+		. "    BEGIN J_GITA_K = CAST(:V_GITA AS VARCHAR(20) CHARACTER SET KSC_5601); WHEN ANY DO J_GITA_K = NULL; END "
+		. "    SUSPEND; "
+		. "  END "
+		. "END"
 
 	try
 	{
@@ -4304,13 +4435,15 @@ image_backup := ""
 			gitaVal := "NULL"
 		else
 		{
-			j_gita_e := StrReplace(j_gita, "'", "''")
+			j_gita_e := StrReplace(j_gita, "\", "\\")
+			j_gita_e := StrReplace(j_gita_e, "'", "''")
 			j_gita_e := StrReplace(j_gita_e, "(", " ")
 			j_gita_e := StrReplace(j_gita_e, ")", " ")
 			gitaVal := "'" . j_gita_e . "'"
 		}
 
 		nameComb := j_name . " / " . j_standard
+		nameComb := StrReplace(nameComb, "\", "\\")
 		nameComb := StrReplace(nameComb, "'", "''")
 
 		if (CONT1 != "")
@@ -4413,6 +4546,29 @@ EnsureMySQLConnection() {
         return false
     dbQuery(myDB, "set character set euckr")
     return true
+}
+
+; UTF-16 문자열 → Firebird _KSC_5601 X'hex' SQL 리터럴
+; AHK v1 Unicode 빌드: 내부 저장이 UTF-16이므로 WideCharToMultiByte(CP949) 사용
+KscHex(str) {
+    if (str = "")
+        return "''"
+    ; UTF-16 → CP949 바이트 길이 계산
+    nBytes := DllCall("WideCharToMultiByte", "UInt", 949, "UInt", 0, "WStr", str, "Int", -1, "Ptr", 0, "Int", 0, "Ptr", 0, "Ptr", 0, "Int") - 1
+    if (nBytes <= 0)
+        return "''"
+    VarSetCapacity(buf, nBytes + 2, 0)
+    DllCall("WideCharToMultiByte", "UInt", 949, "UInt", 0, "WStr", str, "Int", -1, "Ptr", &buf, "Int", nBytes + 1, "Ptr", 0, "Ptr", 0)
+    hexChars := "0123456789ABCDEF"
+    hex := ""
+    Loop, %nBytes%
+    {
+        byte := NumGet(buf, A_Index - 1, "UChar")
+        hi := SubStr(hexChars, (byte >> 4) + 1, 1)
+        lo := SubStr(hexChars, Mod(byte, 16) + 1, 1)
+        hex .= hi . lo
+    }
+    return "_KSC_5601 X'" . hex . "'"
 }
 
 ; Firebird ODBC 연결 객체 반환. 실패 시 "" 반환 + MsgBox.
