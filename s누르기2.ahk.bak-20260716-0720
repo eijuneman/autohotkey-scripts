@@ -2536,8 +2536,6 @@ else
 		총금액 := 0
 	if (입금액 = "")
 		입금액 := 0
-	if (FillMissingPhoneFromGogaek(fbConn, 전화번호, g_pk))
-		ControlSetText, Edit8, %전화번호%, %WINTITLE%
 
 	; EXECUTE BLOCK + WHEN ANY DO: J_GITA 등 일부 행이 EUC-KR 멀티바이트 중간 잘림으로
 	; KSC_5601 CAST 실패하는 경우 해당 컬럼만 NULL 처리하고 행은 유지 (TMS firebirdScheduler.js 패턴)
@@ -3010,8 +3008,6 @@ return
 		총금액 := 0
 	if (입금액 = "")
 		입금액 := 0
-	if (FillMissingPhoneFromGogaek(fbConn, 전화번호, g_pk))
-		ControlSetText, Edit8, %전화번호%, %WINTITLE%
 
 	; EXECUTE BLOCK + WHEN ANY DO: J_GITA 등 일부 행이 EUC-KR 멀티바이트 중간 잘림으로
 	; KSC_5601 CAST 실패하는 경우 해당 컬럼만 NULL 처리하고 행은 유지 (TMS firebirdScheduler.js 패턴)
@@ -4162,8 +4158,6 @@ image_backup := ""
 	catch
 		g_pk := 0
 	rs.Close()
-	if (FillMissingPhoneFromGogaek(fbConn, 전화번호, g_pk))
-		ControlSetText, Edit8, %전화번호%, %WINTITLE%
 
 	sqlEst := ""
 		. "EXECUTE BLOCK RETURNS (E_PK INTEGER, J_PK INTEGER, J_NAME_K VARCHAR(40) CHARACTER SET KSC_5601, J_STANDARD_K VARCHAR(40) CHARACTER SET KSC_5601, E_QTY NUMERIC(18,2), J_GITA_K VARCHAR(20) CHARACTER SET KSC_5601, E_NO INTEGER) AS "
@@ -4414,22 +4408,6 @@ image_backup := ""
 	ct_pk := rs.Fields("CT_PK").Value
 	rs.Close()
 
-	g_pk := 0
-	sqlCt2 := "SELECT G_PK FROM CHITTOP WHERE CT_PK = " . ct_pk
-	try
-	{
-		rsG := fbConn.Execute(sqlCt2)
-		if !rsG.EOF
-			g_pk := rsG.Fields("G_PK").Value
-		rsG.Close()
-	}
-	catch
-	{
-		g_pk := 0
-	}
-	if (FillMissingPhoneFromGogaek(fbConn, 전화번호, g_pk))
-		ControlSetText, Edit8, %전화번호%, %WINTITLE%
-
 	; EXECUTE BLOCK + WHEN ANY DO: J_GITA 등 일부 행이 EUC-KR 멀티바이트 중간 잘림으로
 	; KSC_5601 CAST 실패하는 경우 해당 컬럼만 NULL 처리하고 행은 유지 (TMS firebirdScheduler.js 패턴)
 	sqlChit := ""
@@ -4592,49 +4570,6 @@ EnsureMySQLConnection() {
     if (myDB = "error" || myDB = "")
         return false
     dbQuery(myDB, "set character set euckr")
-    return true
-}
-
-; 화면 연락처가 비었을 때 거래처 원장의 대표전화(G_TEL)로 보완, 없으면 휴대전화(G_HP) 사용.
-FillMissingPhoneFromGogaek(fbConn, ByRef phone, gPk) {
-    phone := Trim(phone)
-    if (phone != "" || gPk = "" || gPk = 0)
-        return false
-    if gPk is not number
-        return false
-    gPk := Floor(gPk)
-
-    sqlPhone := "SELECT FIRST 1 G_TEL, G_HP FROM GOGAEK WHERE G_PK = " . gPk
-    try
-        rsPhone := fbConn.Execute(sqlPhone)
-    catch
-        return false
-
-    if rsPhone.EOF
-    {
-        try rsPhone.Close()
-        return false
-    }
-
-    tel := ""
-    hp := ""
-    try tel := rsPhone.Fields("G_TEL").Value
-    catch
-        tel := ""
-    try hp := rsPhone.Fields("G_HP").Value
-    catch
-        hp := ""
-    try rsPhone.Close()
-
-    tel := Trim(tel)
-    hp := Trim(hp)
-    if (tel != "")
-        phone := tel
-    else if (hp != "")
-        phone := hp
-    else
-        return false
-
     return true
 }
 

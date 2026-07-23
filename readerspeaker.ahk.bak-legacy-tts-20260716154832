@@ -1,0 +1,396 @@
+#NoEnv
+#SingleInstance force
+
+SetBatchLines, -1
+SetTitleMatchMode, 1  ; 창 제목을 부분적으로 일치시킵니다.
+SetTitleMatchMode, slow
+SetKeyDelay, 2
+
+;~ Loop, 3
+;~ {
+;~ winkill, ahk_exe chrome.exe
+;~ }
+Sleep, 100
+
+Loop, 1
+{
+	if WinExist("카카오톡 공유 - Whale")
+	{
+		WinKill, 카카오톡 공유 - Whale
+	}
+	else
+	{
+		break
+	}
+}
+
+
+		;~ WinWait, 배송문자 시스템  -by shwood-,
+		;~ IfWinNotActive, 배송문자 시스템  -by shwood-, , WinActivate, 배송문자 시스템  -by shwood-,
+		;~ WinWaitActive, 배송문자 시스템  -by shwood-,
+
+
+
+		Sleep, 1
+FormatTime, A_tmrw, YYYYMMDD,dd
+;~ WinActivate, 배송문자 시스템  -by shwood-
+ControlGetText, 거래처명1, Edit2, 배송문자 시스템  -by shwood-
+ControlGetText, 날짜1, Edit3, 배송문자 시스템  -by shwood-
+ControlGetText, 시간1, Edit4, 배송문자 시스템  -by shwood-
+ControlGetText, 구분1, Edit10, 배송문자 시스템  -by shwood-
+;~ Send, {ctrl Down}{F10}{ctrl Up}
+;~ RegExMatch(시간1, "(.*):(.*):(.*)", 시간1)
+;~ 시간2:=시간11 "시" 시간12 "분!!"
+
+
+거래처명1 := StrReplace(거래처명1, A_Space , "` ")
+시간1 := StrReplace(시간1, A_Space , "` ")
+날짜1 := StrReplace(날짜1, A_Space , "` ")
+구분1 := StrReplace(구분1, A_Space , "` ")
+
+
+
+
+
+날짜1 := StrReplace(날짜1, "(" , "-")
+;~ MsgBox,  %날짜1%
+날짜1 := StrReplace(날짜1, ")" , "")
+;~ MsgBox,  %날짜1%
+
+RegExMatch(날짜1, "(.*)-(.*)-(.*)((.*))", 일자)
+
+;~ MsgBox,  % 일자1
+;~ 일자합 := 일자2 일자3
+
+RegExMatch(일자1, "(.*)-(.*)", n일자)
+
+
+n일자2 := RegExReplace(n일자2, "01" , Replacement := "1")
+n일자2 := RegExReplace(n일자2, "02" , Replacement := "2")
+n일자2 := RegExReplace(n일자2, "03" , Replacement := "3")
+n일자2 := RegExReplace(n일자2, "04" , Replacement := "4")
+n일자2 := RegExReplace(n일자2, "05" , Replacement := "5")
+n일자2 := RegExReplace(n일자2, "06" , Replacement := "6")
+n일자2 := RegExReplace(n일자2, "07" , Replacement := "7")
+n일자2 := RegExReplace(n일자2, "08" , Replacement := "8")
+n일자2 := RegExReplace(n일자2, "09" , Replacement := "9")
+
+
+일자2 := RegExReplace(일자2, "01" , Replacement := "1")
+일자2 := RegExReplace(일자2, "02" , Replacement := "2")
+일자2 := RegExReplace(일자2, "03" , Replacement := "3")
+일자2 := RegExReplace(일자2, "04" , Replacement := "4")
+일자2 := RegExReplace(일자2, "05" , Replacement := "5")
+일자2 := RegExReplace(일자2, "06" , Replacement := "6")
+일자2 := RegExReplace(일자2, "07" , Replacement := "7")
+일자2 := RegExReplace(일자2, "08" , Replacement := "8")
+일자2 := RegExReplace(일자2, "09" , Replacement := "9")
+일자2 := RegExReplace(일자2, "`n" , Replacement := "")
+
+
+num1 := Round(A_tmrw)
+일자2 := Round(일자2)
+
+
+오늘1 := 일자2 - num1
+;~ MsgBox, %A_tmrw%`n%일자2%`n%오늘1%`n%A_tmrw%`n%일자2%`n%오늘1%
+;~ MsgBox, %오늘1%
+
+if(오늘1 = 0)
+{
+	현재 = 오늘!
+}
+
+else if(오늘1 = 1)
+{
+	현재 = 내일!
+}
+
+else if(오늘1 = 2)
+{
+	현재 = 내일모레
+}
+else if(오늘1 = 3)
+{
+	현재 = 내일모레 글피
+}
+else
+{
+	현재 = 글피 이후
+}
+
+
+
+
+
+
+if (구분1 = "매출")
+{
+내용 := "알림!알림!신흥목재 어드바이져`n흥이입니다!`n" 거래처명1 "`n현장의 신규출고리스트가 추가됐습니다!`n출고날짜는`n" 현재 "`n입니다!`n" n일자2 "월" 일자2 "일!!`n" 일자3 "요일!!" 시간1 "`n입니다.`n출고리스트확인해주세요?"
+;~ 내용 := "알림!알림!신흥목재 어드바이져 흥이입니다! " 거래처명1 "현장의 신규출고리스트가 추가됐습니다!출고날짜는" 현재 "입니다!" n일자2 "월" 일자2 "일!!" 일자3 "요일!!" 시간1 "입니다.출고리스트확인해주세요?"
+}
+else
+{
+	내용 := "알림!알림!신흥목재` 어드바이져`n흥이` 입니다!`n` 신규`n매입`n리스트가` 추가됐습니다!`n입하날짜는`n" 현재 "`n입니다!`n" n일자2 "월" 일자2 "일!!`n" 일자3 "요일!!" 시간1 "`n입니다.`n매입리스트` 확인해주세요?"
+}
+
+
+;~ MsgBox, % 내용
+
+ExampleURL = https://papago.naver.com/
+
+
+
+
+; ===== 파파고 TTS API 직접 호출 (IE/브라우저 폐기 - Edge 창 안 뜸) =====
+; 발주창에서 만든 멘트(내용)를 파파고 jinho 음성 mp3로 받아 재생. 인터넷만 있으면 됨.
+FileCreateDir, C:\Temp
+FileAppend, % "DIAG|cust=[" 거래처명1 "]|date=[" 날짜1 "]|time=[" 시간1 "]|gubun=[" 구분1 "]|CONTENT=[" 내용 "]||", C:\Temp\rs_content.log
+ttsText := UrlEncodeUtf8(내용)
+ttsId := ""
+http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+http.Open("POST", "https://papago.naver.com/api/tts/makeID", false)
+http.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+http.SetRequestHeader("Referer", "https://papago.naver.com/")
+try http.Send("alpha=0&pitch=0&speaker=kyuri&speed=1&text=" ttsText)
+resp := http.ResponseText
+if RegExMatch(resp, "i)""id""\s*:\s*""([^""]+)""", m)
+    ttsId := m1
+if (ttsId = "") {
+    ; 인터넷 끊김 등 실패 시 Windows 내장 음성으로 폴백
+    try ComObjCreate("SAPI.SpVoice").Speak(내용)
+    ExitApp
+}
+mp3Path := A_Temp "\papago_tts.mp3"
+http2 := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+http2.Open("GET", "https://papago.naver.com/api/tts/" ttsId, false)
+http2.SetRequestHeader("Referer", "https://papago.naver.com/")
+try http2.Send()
+ado := ComObjCreate("ADODB.Stream")
+ado.Type := 1
+ado.Open()
+ado.Write(http2.ResponseBody)
+ado.SaveToFile(mp3Path, 2)
+ado.Close()
+SoundPlay, %mp3Path%, wait
+ExitApp
+return
+
+return
+
+
+
+
+;~ 인터넷주소 := "https://papago.naver.com/?sk=auto&tk=en&st=알림!알림!신흥목재` 어드바이져%0A흥이` 입니다!%0A알림!알림!신흥목재` 어드바이져%0A흥이` 입니다!%0A알림!알림!신흥목재` 어드바이져%0A흥이` 입니다!%0A알림!알림!신흥목재` 어드바이져%0A흥이` 입니다!%0A알림!알림!신흥목재` 어드바이져%0A흥이` 입니다!%0A알림!알림!신흥목재` 어드바이져%0A흥이` 입니다!%0A" 거래처명1 "%0A현장` 의` 신규출고리스트가` 추가됐습니다.%0A출고날짜는%0A" 현재 "%0A입니다.%0A" n일자2 "월" 일자2 "일!!" 일자3 "요일!!" 시간1 "입니다.%0A출고리스트` 확인해주세요?"
+
+;~ MsgBox, %인터넷주소%
+
+    Run, chrome.exe %인터넷주소%
+;~ return
+
+;~ Clipboard1 := Clipboard
+Sleep, 2000
+;~ Clipboard1 := Clipboard
+Clipboard =
+Sleep, 100
+	WinMove, Papago - Chrome, , 1950, 416, 848, 753
+	WinMove, Papago - Chrome, , 1938, 416, 848, 753
+
+
+Sleep, 1000
+
+;~ Loop
+;~ {
+/*
+	if (구분1 = "매출")
+	{
+	Clipboard = % "알림!알림!신흥목재 어드바이져`n 흥이 입니다!`n" 거래처명1 "`n현장 의 신규출고리스트가 추가됐습니다.`n 출고날짜는`n" 현재 "`n입니다. `n" n일자2 "월" 일자2 "일!!" 일자3 "요일!!" 시간1 "입니다.`n 출고리스트 확인해주세요?"
+	}
+	else
+	{
+	Clipboard = % "알림!알림!신흥목재 어드바이져`n 흥이 입니다!`n 신규`n매입리스트가 추가됐습니다.`n 입고날짜는`n" 현재 "`n입니다. `n" n일자2 "월" 일자2 "일!!" 일자3 "요일!!" 시간1 "입니다.`n 매입리스트 확인해주세요?"
+	}
+ClipWait, 2
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Sleep, 100
+	SoundPlay, \\192.168.0.1\hdd2\일정표 최근\일정표220730\sound\알림음24.mp3
+
+		WinWait, Papago - Chrome,
+		IfWinNotActive, Papago - Chrome, , WinActivate, Papago - Chrome,
+		WinWaitActive, Papago - Chrome,
+Sleep, 1000
+
+	;~ ControlSend, , {Ctrl Down}v{Ctrl Up} , Papago - Chrome
+
+		;~ Sleep, 1000
+		ControlSend, , {tab 2}, Papago - Chrome
+		Sleep, 1000
+		ControlSend, , {Enter}, Papago - Chrome
+		Sleep, 1000
+	;~ ControlSend, , {Ctrl up} , Papago - Chrome
+
+
+
+		;~ WinWait, Papago - Chrome,
+		;~ IfWinNotActive, Papago - Chrome, , WinActivate, Papago - Chrome,
+		;~ WinWaitActive, Papago - Chrome,
+
+
+
+	;~ Sleep,100
+	;~ ControlSend, , {Enter}, Papago - Chrome
+	;~ Sleep,1000
+		Clipboard =
+Clipboard := Clipboard1
+WinMinimize, Papago - Chrome
+Sleep, 22000
+winkill, ahk_exe chrome.exe
+ExitApp
+return
+
+
+
+
+
+
+; 요일 구하기 함수
+Get_Weekday(parmDate, parmMode)
+{
+if StrLen(parmDate) <> 8
+return,""
+if parmDate is not Integer
+return,""
+if parmMode not in 0,1
+return,""
+FormatTime,WeekDay,%parmDate%, ddd
+if parmMode = 1
+{
+objWeekDay := {"일":1, "월":2, "화":3, "수":4, "목":5, "금":6, "토":7}
+ReturnString := objWeekDay [WeekDay]
+}
+else
+ReturnString := WeekDay
+return,ReturnString
+}
+
+
+
+;vWDayStart: day defined as first day of week (Sun:1, Sat:7)
+DateGetWeekStart(vDate, vWDayStart:=2, vFormat:="yyyyMMddHHmmss")
+{
+	if (vDate = "")
+		vDate := A_Now
+	FormatTime, vWDay, % vDate, WDay
+	vNum := Mod(vWDayStart+7-vWDay, 7)
+	if vNum
+		EnvAdd, vDate, % vNum-7, Days
+	vDate := SubStr(vDate, 1, 8) "000000"
+	if !(vFormat == "yyyyMMddHHmmss")
+	{
+		FormatTime, vDate, % vDate, % vFormat
+		return vDate
+	}
+	return vDate
+}
+
+;vWDayEnd: day defined as last day of week (Sun:1, Sat:7)
+DateGetWeekEnd(vDate, vWDayEnd:=1, vFormat:="yyyyMMddHHmmss")
+{
+	if (vDate = "")
+		vDate := A_Now
+	FormatTime, vWDay, % vDate, WDay
+	vNum := Mod(vWDayEnd+7-vWDay, 7)
+	if vNum
+		EnvAdd, vDate, % vNum, Days
+	vDate := SubStr(vDate, 1, 8) "235959"
+	if !(vFormat == "yyyyMMddHHmmss")
+	{
+		FormatTime, vDate, % vDate, % vFormat
+		return vDate
+	}
+	return vDate
+}
+
+
+;~ MsgBox, % vMonthStart "`r`n" vDate "`r`n" vMonthEnd
+
+DateAdd(DateTime, Time, TimeUnits)
+{
+	EnvAdd, DateTime, % Time, % TimeUnits
+	return DateTime
+}
+
+
+pwbget()
+{
+	try
+	{
+		; IE 컴 오브젝트가 간혹가다가 오류가 날 때가 있는데, 이 때를 위해 Try-Catch 구문을 사용했어요. 완벽하게 잡는진 모르겠네요.
+		pwb := ComObjCreate("InternetExplorer.Application") ; create IE
+		return pwb
+	}
+	catch e
+	{
+		pwb:=""
+		sleep,100
+		pwbget()
+	}
+}
+
+IELoad(pwb)
+{
+    If !pwb    ;If wb is not a valid pointer then quit
+        Return False
+    Loop    ;Otherwise sleep for .1 seconds untill the page starts loading
+        Sleep,100
+    Until (pwb.busy)
+    Loop    ;Once it starts loading wait until completes
+        Sleep,100
+    Until (!pwb.busy)
+    Loop    ;optional check to wait for the page to completely load
+        Sleep,100
+    Until (pwb.Document.Readystate = "Complete")
+Return True
+}
+
+
+return
+
+; ===== 문자열(시스템 ANSI/CP949) -> UTF-8 percent-encoding (파파고 text 파라미터용) =====
+UrlEncodeUtf8(str) {
+    nW := DllCall("MultiByteToWideChar", "UInt", 0, "UInt", 0, "AStr", str, "Int", -1, "Ptr", 0, "Int", 0)
+    VarSetCapacity(wbuf, nW*2, 0)
+    DllCall("MultiByteToWideChar", "UInt", 0, "UInt", 0, "AStr", str, "Int", -1, "Ptr", &wbuf, "Int", nW)
+    nU := DllCall("WideCharToMultiByte", "UInt", 65001, "UInt", 0, "Ptr", &wbuf, "Int", -1, "Ptr", 0, "Int", 0, "Ptr", 0, "Ptr", 0)
+    VarSetCapacity(u8, nU, 0)
+    DllCall("WideCharToMultiByte", "UInt", 65001, "UInt", 0, "Ptr", &wbuf, "Int", -1, "Ptr", &u8, "Int", nU, "Ptr", 0, "Ptr", 0)
+    hexChars := "0123456789ABCDEF"
+    out := ""
+    Loop, % nU-1 {
+        b := NumGet(u8, A_Index-1, "UChar")
+        if ((b>=0x30 && b<=0x39) || (b>=0x41 && b<=0x5A) || (b>=0x61 && b<=0x7A) || b=0x2D || b=0x5F || b=0x2E || b=0x7E)
+            out .= Chr(b)
+        else {
+            hi := (b >> 4) & 0xF
+            lo := b & 0xF
+            out .= "%" SubStr(hexChars, hi+1, 1) SubStr(hexChars, lo+1, 1)
+        }
+    }
+    return out
+}

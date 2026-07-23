@@ -1,368 +1,277 @@
-#Persistent  ; ½ºÅ©¸³Æ®¸¦ °è¼Ó ½ÇÇàÇÕ´Ï´Ù.
+ï»¿#NoEnv
 #SingleInstance force
 
-SetTitleMatchMode, 2  ; Ã¢ Á¦¸ñÀ» ºÎºĞÀûÀ¸·Î ÀÏÄ¡½ÃÅµ´Ï´Ù.
-SetKeyDelay, 1
+SetBatchLines, -1
+SetTitleMatchMode, 1  ; ì°½ ì œëª©ì„ ë¶€ë¶„ì ìœ¼ë¡œ ì¼ì¹˜ì‹œí‚µë‹ˆë‹¤.
+SetTitleMatchMode, slow
+SetKeyDelay, 2
 
-    Run, "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" "https://papago.naver.com/"
+;~ Loop, 3
+;~ {
+;~ winkill, ahk_exe chrome.exe
+;~ }
+Sleep, 100
+
+Loop, 1
+{
+	if WinExist("ì¹´ì¹´ì˜¤í†¡ ê³µìœ  - Whale")
+	{
+		WinKill, ì¹´ì¹´ì˜¤í†¡ ê³µìœ  - Whale
+	}
+	else
+	{
+		break
+	}
+}
+
+
+		;~ WinWait, ë°°ì†¡ë¬¸ì ì‹œìŠ¤í…œ  -by shwood-,
+		;~ IfWinNotActive, ë°°ì†¡ë¬¸ì ì‹œìŠ¤í…œ  -by shwood-, , WinActivate, ë°°ì†¡ë¬¸ì ì‹œìŠ¤í…œ  -by shwood-,
+		;~ WinWaitActive, ë°°ì†¡ë¬¸ì ì‹œìŠ¤í…œ  -by shwood-,
 
 
 
+		Sleep, 1
 FormatTime, A_tmrw, YYYYMMDD,dd
-;~ MsgBox, % A_tmrw
-
-;~ return
-
-ControlGetText, °Å·¡Ã³¸í1, Edit2,  ¹è¼Û¹®ÀÚ ½Ã½ºÅÛ  -by shwood-
-ControlGetText, ³¯Â¥1, Edit3,  ¹è¼Û¹®ÀÚ ½Ã½ºÅÛ  -by shwood-
-ControlGetText, ½Ã°£1, Edit4,  ¹è¼Û¹®ÀÚ ½Ã½ºÅÛ  -by shwood-
-Send, {ctrl Down}{F10}{ctrl Up}
-³¯Â¥1 := StrReplace(³¯Â¥1, "(" , "-")
-;~ MsgBox,  %³¯Â¥1%
-³¯Â¥1 := StrReplace(³¯Â¥1, ")" , "")
-;~ MsgBox,  %³¯Â¥1%
-
-RegExMatch(³¯Â¥1, "(.*)-(.*)-(.*)((.*))", ÀÏÀÚ)
-
-;~ MsgBox,  % ÀÏÀÚ1
-;~ ÀÏÀÚÇÕ := ÀÏÀÚ2 ÀÏÀÚ3
-
-RegExMatch(ÀÏÀÚ1, "(.*)-(.*)", nÀÏÀÚ)
+;~ WinActivate, ë°°ì†¡ë¬¸ì ì‹œìŠ¤í…œ  -by shwood-
+ControlGetText, ê±°ë˜ì²˜ëª…1, Edit2, ë°°ì†¡ë¬¸ì ì‹œìŠ¤í…œ  -by shwood-
+ControlGetText, ë‚ ì§œ1, Edit3, ë°°ì†¡ë¬¸ì ì‹œìŠ¤í…œ  -by shwood-
+ControlGetText, ì‹œê°„1, Edit4, ë°°ì†¡ë¬¸ì ì‹œìŠ¤í…œ  -by shwood-
+ControlGetText, êµ¬ë¶„1, Edit10, ë°°ì†¡ë¬¸ì ì‹œìŠ¤í…œ  -by shwood-
+;~ Send, {ctrl Down}{F10}{ctrl Up}
+;~ RegExMatch(ì‹œê°„1, "(.*):(.*):(.*)", ì‹œê°„1)
+;~ ì‹œê°„2:=ì‹œê°„11 "ì‹œ" ì‹œê°„12 "ë¶„!!"
 
 
-;~ MsgBox, %nÀÏÀÚ1%
-;~ MsgBox, %nÀÏÀÚ2%
-;~ MsgBox, %ÀÏÀÚ2%
-;~ MsgBox, %ÀÏÀÚ3%
-
-
-;~ RegExMatch(½Ã°£1, "(.*):(.*):(.*)", n½Ã°£1)
-
-;~ MsgBox, % n½Ã°£11 ":" n½Ã°£12
-
-;~ return
-
-
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "01" , Replacement := "1")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "02" , Replacement := "2")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "03" , Replacement := "3")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "04" , Replacement := "4")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "05" , Replacement := "5")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "06" , Replacement := "6")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "07" , Replacement := "7")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "08" , Replacement := "8")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "09" , Replacement := "9")
+ê±°ë˜ì²˜ëª…1 := StrReplace(ê±°ë˜ì²˜ëª…1, A_Space , "` ")
+ì‹œê°„1 := StrReplace(ì‹œê°„1, A_Space , "` ")
+ë‚ ì§œ1 := StrReplace(ë‚ ì§œ1, A_Space , "` ")
+êµ¬ë¶„1 := StrReplace(êµ¬ë¶„1, A_Space , "` ")
 
 
 
 
 
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "01" , Replacement := "1")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "02" , Replacement := "2")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "03" , Replacement := "3")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "04" , Replacement := "4")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "05" , Replacement := "5")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "06" , Replacement := "6")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "07" , Replacement := "7")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "08" , Replacement := "8")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "09" , Replacement := "9")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "`n" , Replacement := "")
+ë‚ ì§œ1 := StrReplace(ë‚ ì§œ1, "(" , "-")
+;~ MsgBox,  %ë‚ ì§œ1%
+ë‚ ì§œ1 := StrReplace(ë‚ ì§œ1, ")" , "")
+;~ MsgBox,  %ë‚ ì§œ1%
+
+RegExMatch(ë‚ ì§œ1, "(.*)-(.*)-(.*)((.*))", ì¼ì)
+
+;~ MsgBox,  % ì¼ì1
+;~ ì¼ìí•© := ì¼ì2 ì¼ì3
+
+RegExMatch(ì¼ì1, "(.*)-(.*)", nì¼ì)
 
 
+nì¼ì2 := RegExReplace(nì¼ì2, "01" , Replacement := "1")
+nì¼ì2 := RegExReplace(nì¼ì2, "02" , Replacement := "2")
+nì¼ì2 := RegExReplace(nì¼ì2, "03" , Replacement := "3")
+nì¼ì2 := RegExReplace(nì¼ì2, "04" , Replacement := "4")
+nì¼ì2 := RegExReplace(nì¼ì2, "05" , Replacement := "5")
+nì¼ì2 := RegExReplace(nì¼ì2, "06" , Replacement := "6")
+nì¼ì2 := RegExReplace(nì¼ì2, "07" , Replacement := "7")
+nì¼ì2 := RegExReplace(nì¼ì2, "08" , Replacement := "8")
+nì¼ì2 := RegExReplace(nì¼ì2, "09" , Replacement := "9")
 
 
-
+ì¼ì2 := RegExReplace(ì¼ì2, "01" , Replacement := "1")
+ì¼ì2 := RegExReplace(ì¼ì2, "02" , Replacement := "2")
+ì¼ì2 := RegExReplace(ì¼ì2, "03" , Replacement := "3")
+ì¼ì2 := RegExReplace(ì¼ì2, "04" , Replacement := "4")
+ì¼ì2 := RegExReplace(ì¼ì2, "05" , Replacement := "5")
+ì¼ì2 := RegExReplace(ì¼ì2, "06" , Replacement := "6")
+ì¼ì2 := RegExReplace(ì¼ì2, "07" , Replacement := "7")
+ì¼ì2 := RegExReplace(ì¼ì2, "08" , Replacement := "8")
+ì¼ì2 := RegExReplace(ì¼ì2, "09" , Replacement := "9")
+ì¼ì2 := RegExReplace(ì¼ì2, "`n" , Replacement := "")
 
 
 num1 := Round(A_tmrw)
-ÀÏÀÚ2 := Round(ÀÏÀÚ2)
+ì¼ì2 := Round(ì¼ì2)
 
 
-¿À´Ã1 := ÀÏÀÚ2 - num1
-;~ MsgBox, %A_tmrw%`n%ÀÏÀÚ2%`n%¿À´Ã1%`n%A_tmrw%`n%ÀÏÀÚ2%`n%¿À´Ã1%
-;~ MsgBox, %¿À´Ã1%
-if(¿À´Ã1 = 0)
+ì˜¤ëŠ˜1 := ì¼ì2 - num1
+;~ MsgBox, %A_tmrw%`n%ì¼ì2%`n%ì˜¤ëŠ˜1%`n%A_tmrw%`n%ì¼ì2%`n%ì˜¤ëŠ˜1%
+;~ MsgBox, %ì˜¤ëŠ˜1%
+
+if(ì˜¤ëŠ˜1 = 0)
 {
-	ÇöÀç = ¿À´Ã
-}
-else if(¿À´Ã1 = 1)
-{
-	ÇöÀç = ³»ÀÏ
+	í˜„ì¬ = ì˜¤ëŠ˜!
 }
 
+else if(ì˜¤ëŠ˜1 = 1)
+{
+	í˜„ì¬ = ë‚´ì¼!
+}
+
+else if(ì˜¤ëŠ˜1 = 2)
+{
+	í˜„ì¬ = ë‚´ì¼ëª¨ë ˆ
+}
+else if(ì˜¤ëŠ˜1 = 3)
+{
+	í˜„ì¬ = ë‚´ì¼ëª¨ë ˆ ê¸€í”¼
+}
 else
 {
-
+	í˜„ì¬ = ê¸€í”¼ ì´í›„
 }
 
 
 
-Clipboard := % "¾Ë¸²!¾Ë¸²!¾Ë¸²!`n" °Å·¡Ã³¸í1 "`nÇöÀå ÀÇ ½Å±ÔÃâ°í¸®½ºÆ®°¡ Ãß°¡µÆ½À´Ï´Ù.`n Ãâ°í³¯Â¥´Â" ÇöÀç "ÀÔ´Ï´Ù. `n" nÀÏÀÚ2 "¿ù" ÀÏÀÚ2 "ÀÏ" ÀÏÀÚ3 "¿äÀÏ" ½Ã°£1 "ÀÔ´Ï´Ù.`n Ãâ°í¸®½ºÆ® È®ÀÎÇØÁÖ¼¼¿ä?"
 
 
 
-		WinWait, Papago - Chrome,
-		IfWinNotActive, Papago - Chrome, , WinActivate, Papago - Chrome,
-		WinWaitActive, Papago - Chrome,
+if (êµ¬ë¶„1 = "ë§¤ì¶œ")
+{
+ë‚´ìš© := "ì•Œë¦¼!ì•Œë¦¼!ì‹ í¥ëª©ì¬ ì–´ë“œë°”ì´ì ¸`ní¥ì´ì…ë‹ˆë‹¤!`n" ê±°ë˜ì²˜ëª…1 "`ní˜„ì¥ì˜ ì‹ ê·œì¶œê³ ë¦¬ìŠ¤íŠ¸ê°€ ì¶”ê°€ëìŠµë‹ˆë‹¤!`nì¶œê³ ë‚ ì§œëŠ”`n" í˜„ì¬ "`nì…ë‹ˆë‹¤!`n" nì¼ì2 "ì›”" ì¼ì2 "ì¼!!`n" ì¼ì3 "ìš”ì¼!!" ì‹œê°„1 "`nì…ë‹ˆë‹¤.`nì¶œê³ ë¦¬ìŠ¤íŠ¸í™•ì¸í•´ì£¼ì„¸ìš”?"
+;~ ë‚´ìš© := "ì•Œë¦¼!ì•Œë¦¼!ì‹ í¥ëª©ì¬ ì–´ë“œë°”ì´ì ¸ í¥ì´ì…ë‹ˆë‹¤! " ê±°ë˜ì²˜ëª…1 "í˜„ì¥ì˜ ì‹ ê·œì¶œê³ ë¦¬ìŠ¤íŠ¸ê°€ ì¶”ê°€ëìŠµë‹ˆë‹¤!ì¶œê³ ë‚ ì§œëŠ”" í˜„ì¬ "ì…ë‹ˆë‹¤!" nì¼ì2 "ì›”" ì¼ì2 "ì¼!!" ì¼ì3 "ìš”ì¼!!" ì‹œê°„1 "ì…ë‹ˆë‹¤.ì¶œê³ ë¦¬ìŠ¤íŠ¸í™•ì¸í•´ì£¼ì„¸ìš”?"
+}
+else
+{
+	ë‚´ìš© := "ì•Œë¦¼!ì•Œë¦¼!ì‹ í¥ëª©ì¬` ì–´ë“œë°”ì´ì ¸`ní¥ì´` ì…ë‹ˆë‹¤!`n` ì‹ ê·œ`në§¤ì…`në¦¬ìŠ¤íŠ¸ê°€` ì¶”ê°€ëìŠµë‹ˆë‹¤!`nì…í•˜ë‚ ì§œëŠ”`n" í˜„ì¬ "`nì…ë‹ˆë‹¤!`n" nì¼ì2 "ì›”" ì¼ì2 "ì¼!!`n" ì¼ì3 "ìš”ì¼!!" ì‹œê°„1 "`nì…ë‹ˆë‹¤.`në§¤ì…ë¦¬ìŠ¤íŠ¸` í™•ì¸í•´ì£¼ì„¸ìš”?"
+}
 
-Sleep, 500
 
-	WinMove, Papago - Chrome, , -877, 388, 848, 753
+;~ MsgBox, % ë‚´ìš©
 
-Sleep, 500
-	ControlSend, , {Ctrl Down}v{Ctrl up} , Papago - Chrome
-	Sleep,1000
-	ControlSend, , {tab 2}{Space} , Papago - Chrome
-	Sleep,300
-		WinWait, Papago - Chrome,
-		IfWinNotActive, Papago - Chrome, , WinActivate, Papago - Chrome,
-		WinWaitActive, Papago - Chrome,
+ExampleURL = https://papago.naver.com/
 
-;~ Sleep, 10000
-;~ winkill, ahk_exe chrome.exe
+
+
+
+; ===== íŒŒíŒŒê³  TTS API ì§ì ‘ í˜¸ì¶œ (IE/ë¸Œë¼ìš°ì € íê¸° - Edge ì°½ ì•ˆ ëœ¸) =====
+; ë°œì£¼ì°½ì—ì„œ ë§Œë“  ë©˜íŠ¸(ë‚´ìš©)ë¥¼ íŒŒíŒŒê³  jinho ìŒì„± mp3ë¡œ ë°›ì•„ ì¬ìƒ. ì¸í„°ë„·ë§Œ ìˆìœ¼ë©´ ë¨.
+FileCreateDir, C:\Temp
+FileAppend, % "DIAG|cust=[" ê±°ë˜ì²˜ëª…1 "]|date=[" ë‚ ì§œ1 "]|time=[" ì‹œê°„1 "]|gubun=[" êµ¬ë¶„1 "]|CONTENT=[" ë‚´ìš© "]||", C:\Temp\rs_content.log
+if (PublishIntegratedTts(ë‚´ìš©))
+    ExitApp
+ttsText := UrlEncodeUtf8(ë‚´ìš©)
+ttsId := ""
+http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+http.Open("POST", "https://papago.naver.com/api/tts/makeID", false)
+http.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+http.SetRequestHeader("Referer", "https://papago.naver.com/")
+try http.Send("alpha=0&pitch=0&speaker=kyuri&speed=1&text=" ttsText)
+resp := http.ResponseText
+if RegExMatch(resp, "i)""id""\s*:\s*""([^""]+)""", m)
+    ttsId := m1
+if (ttsId = "") {
+    ; ì¸í„°ë„· ëŠê¹€ ë“± ì‹¤íŒ¨ ì‹œ Windows ë‚´ì¥ ìŒì„±ìœ¼ë¡œ í´ë°±
+    try ComObjCreate("SAPI.SpVoice").Speak(ë‚´ìš©)
+    ExitApp
+}
+mp3Path := A_Temp "\papago_tts.mp3"
+http2 := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+http2.Open("GET", "https://papago.naver.com/api/tts/" ttsId, false)
+http2.SetRequestHeader("Referer", "https://papago.naver.com/")
+try http2.Send()
+ado := ComObjCreate("ADODB.Stream")
+ado.Type := 1
+ado.Open()
+ado.Write(http2.ResponseBody)
+ado.SaveToFile(mp3Path, 2)
+ado.Close()
+SoundPlay, %mp3Path%, wait
 ExitApp
 return
 
-
-
-
-
-
-; ¿äÀÏ ±¸ÇÏ±â ÇÔ¼ö
-Get_Weekday(parmDate, parmMode)
-{
-if StrLen(parmDate) <> 8
-return,""
-if parmDate is not Integer
-return,""
-if parmMode not in 0,1
-return,""
-FormatTime,WeekDay,%parmDate%, ddd
-if parmMode = 1
-{
-objWeekDay := {"ÀÏ":1, "¿ù":2, "È­":3, "¼ö":4, "¸ñ":5, "±İ":6, "Åä":7}
-ReturnString := objWeekDay [WeekDay]
-}
-else
-ReturnString := WeekDay
-return,ReturnString
-}
-
-
-;vWDayStart: day defined as first day of week (Sun:1, Sat:7)
-DateGetWeekStart(vDate, vWDayStart:=2, vFormat:="yyyyMMddHHmmss")
-{
-	if (vDate = "")
-		vDate := A_Now
-	FormatTime, vWDay, % vDate, WDay
-	vNum := Mod(vWDayStart+7-vWDay, 7)
-	if vNum
-		EnvAdd, vDate, % vNum-7, Days
-	vDate := SubStr(vDate, 1, 8) "000000"
-	if !(vFormat == "yyyyMMddHHmmss")
-	{
-		FormatTime, vDate, % vDate, % vFormat
-		return vDate
-	}
-	return vDate
-}
-
-;vWDayEnd: day defined as last day of week (Sun:1, Sat:7)
-DateGetWeekEnd(vDate, vWDayEnd:=1, vFormat:="yyyyMMddHHmmss")
-{
-	if (vDate = "")
-		vDate := A_Now
-	FormatTime, vWDay, % vDate, WDay
-	vNum := Mod(vWDayEnd+7-vWDay, 7)
-	if vNum
-		EnvAdd, vDate, % vNum, Days
-	vDate := SubStr(vDate, 1, 8) "235959"
-	if !(vFormat == "yyyyMMddHHmmss")
-	{
-		FormatTime, vDate, % vDate, % vFormat
-		return vDate
-	}
-	return vDate
-}
-
-
-;~ MsgBox, % vMonthStart "`r`n" vDate "`r`n" vMonthEnd
-
-DateAdd(DateTime, Time, TimeUnits)
-{
-	EnvAdd, DateTime, % Time, % TimeUnits
-	return DateTime
-}
-
-
-/*
-FormatTime, A_tmrw, YYYYMMDD,dd
-;~ MsgBox, % A_tmrw
-
-;~ return
-
-ControlGetText, °Å·¡Ã³¸í1, Edit2,  ¹è¼Û¹®ÀÚ ½Ã½ºÅÛ  -by shwood-
-ControlGetText, ³¯Â¥1, Edit3,  ¹è¼Û¹®ÀÚ ½Ã½ºÅÛ  -by shwood-
-ControlGetText, ½Ã°£1, Edit4,  ¹è¼Û¹®ÀÚ ½Ã½ºÅÛ  -by shwood-
-Send, {ctrl Down}{F10}{ctrl Up}
-³¯Â¥1 := StrReplace(³¯Â¥1, "(" , "-")
-;~ MsgBox,  %³¯Â¥1%
-³¯Â¥1 := StrReplace(³¯Â¥1, ")" , "")
-;~ MsgBox,  %³¯Â¥1%
-
-RegExMatch(³¯Â¥1, "(.*)-(.*)-(.*)((.*))", ÀÏÀÚ)
-
-;~ MsgBox,  % ÀÏÀÚ1
-;~ ÀÏÀÚÇÕ := ÀÏÀÚ2 ÀÏÀÚ3
-
-RegExMatch(ÀÏÀÚ1, "(.*)-(.*)", nÀÏÀÚ)
-
-
-;~ MsgBox, %nÀÏÀÚ1%
-;~ MsgBox, %nÀÏÀÚ2%
-;~ MsgBox, %ÀÏÀÚ2%
-;~ MsgBox, %ÀÏÀÚ3%
-
-
-;~ RegExMatch(½Ã°£1, "(.*):(.*):(.*)", n½Ã°£1)
-
-;~ MsgBox, % n½Ã°£11 ":" n½Ã°£12
-
-;~ return
-
-
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "01" , Replacement := "1")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "02" , Replacement := "2")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "03" , Replacement := "3")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "04" , Replacement := "4")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "05" , Replacement := "5")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "06" , Replacement := "6")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "07" , Replacement := "7")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "08" , Replacement := "8")
-nÀÏÀÚ2 := RegExReplace(nÀÏÀÚ2, "09" , Replacement := "9")
-
-
-
-
-
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "01" , Replacement := "1")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "02" , Replacement := "2")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "03" , Replacement := "3")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "04" , Replacement := "4")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "05" , Replacement := "5")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "06" , Replacement := "6")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "07" , Replacement := "7")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "08" , Replacement := "8")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "09" , Replacement := "9")
-ÀÏÀÚ2 := RegExReplace(ÀÏÀÚ2, "`n" , Replacement := "")
-
-
-;~ MsgBox, %nÀÏÀÚ2%
-;~ MsgBox, %ÀÏÀÚ2%
-
-
-;~ MsgBox, % "Ãâ°í³¯Â¥´Â" ÀÏÀÚ2 "¿ù" ÀÏÀÚ3 "ÀÏ" ÀÏÀÚ4 "¿äÀÏ"
-
-;~ return
-/*
-
-³¯Â¥1 := StrReplace(ÀÏÀÚÇÕ, "(" , "-")
-³¯Â¥1 := StrReplace(ÀÏÀÚÇÕ, "" , "-")
-
-MsgBox, %ÀÏÀÚÇÕ%
-MsgBox, %A_tmrw%
-MsgBox, %A_tmrw%%ÀÏÀÚÇÕ%
-MsgBox, %ÀÏÀÚÇÕ%%A_tmrw%
-if (A_tmrw = ÀÏÀÚÇÕ)
-{
-	ÇöÀç = ¿À´Ã
-	MsgBox, %ÇöÀç%
-}
-
-else
-
-{
-	ÇöÀç = ¹Ì·¡
-	MsgBox, %ÇöÀç%
-}
-
-
-
-
-
-
 return
 
 
 
 
-MsgBox,  %ÀÏÀÚ1%
-MsgBox,  %ÀÏÀÚ2%
-MsgBox,  %ÀÏÀÚ3%
-MsgBox,  %ÀÏÀÚ4%
+;~ ì¸í„°ë„·ì£¼ì†Œ := "https://papago.naver.com/?sk=auto&tk=en&st=ì•Œë¦¼!ì•Œë¦¼!ì‹ í¥ëª©ì¬` ì–´ë“œë°”ì´ì ¸%0Aí¥ì´` ì…ë‹ˆë‹¤!%0Aì•Œë¦¼!ì•Œë¦¼!ì‹ í¥ëª©ì¬` ì–´ë“œë°”ì´ì ¸%0Aí¥ì´` ì…ë‹ˆë‹¤!%0Aì•Œë¦¼!ì•Œë¦¼!ì‹ í¥ëª©ì¬` ì–´ë“œë°”ì´ì ¸%0Aí¥ì´` ì…ë‹ˆë‹¤!%0Aì•Œë¦¼!ì•Œë¦¼!ì‹ í¥ëª©ì¬` ì–´ë“œë°”ì´ì ¸%0Aí¥ì´` ì…ë‹ˆë‹¤!%0Aì•Œë¦¼!ì•Œë¦¼!ì‹ í¥ëª©ì¬` ì–´ë“œë°”ì´ì ¸%0Aí¥ì´` ì…ë‹ˆë‹¤!%0Aì•Œë¦¼!ì•Œë¦¼!ì‹ í¥ëª©ì¬` ì–´ë“œë°”ì´ì ¸%0Aí¥ì´` ì…ë‹ˆë‹¤!%0A" ê±°ë˜ì²˜ëª…1 "%0Aí˜„ì¥` ì˜` ì‹ ê·œì¶œê³ ë¦¬ìŠ¤íŠ¸ê°€` ì¶”ê°€ëìŠµë‹ˆë‹¤.%0Aì¶œê³ ë‚ ì§œëŠ”%0A" í˜„ì¬ "%0Aì…ë‹ˆë‹¤.%0A" nì¼ì2 "ì›”" ì¼ì2 "ì¼!!" ì¼ì3 "ìš”ì¼!!" ì‹œê°„1 "ì…ë‹ˆë‹¤.%0Aì¶œê³ ë¦¬ìŠ¤íŠ¸` í™•ì¸í•´ì£¼ì„¸ìš”?"
+
+;~ MsgBox, %ì¸í„°ë„·ì£¼ì†Œ%
+
+    Run, chrome.exe %ì¸í„°ë„·ì£¼ì†Œ%
+;~ return
+
+;~ Clipboard1 := Clipboard
+Sleep, 2000
+;~ Clipboard1 := Clipboard
+Clipboard =
+Sleep, 100
+	WinMove, Papago - Chrome, , 1950, 416, 848, 753
+	WinMove, Papago - Chrome, , 1938, 416, 848, 753
+
+
+Sleep, 1000
+
+;~ Loop
+;~ {
+/*
+	if (êµ¬ë¶„1 = "ë§¤ì¶œ")
+	{
+	Clipboard = % "ì•Œë¦¼!ì•Œë¦¼!ì‹ í¥ëª©ì¬ ì–´ë“œë°”ì´ì ¸`n í¥ì´ ì…ë‹ˆë‹¤!`n" ê±°ë˜ì²˜ëª…1 "`ní˜„ì¥ ì˜ ì‹ ê·œì¶œê³ ë¦¬ìŠ¤íŠ¸ê°€ ì¶”ê°€ëìŠµë‹ˆë‹¤.`n ì¶œê³ ë‚ ì§œëŠ”`n" í˜„ì¬ "`nì…ë‹ˆë‹¤. `n" nì¼ì2 "ì›”" ì¼ì2 "ì¼!!" ì¼ì3 "ìš”ì¼!!" ì‹œê°„1 "ì…ë‹ˆë‹¤.`n ì¶œê³ ë¦¬ìŠ¤íŠ¸ í™•ì¸í•´ì£¼ì„¸ìš”?"
+	}
+	else
+	{
+	Clipboard = % "ì•Œë¦¼!ì•Œë¦¼!ì‹ í¥ëª©ì¬ ì–´ë“œë°”ì´ì ¸`n í¥ì´ ì…ë‹ˆë‹¤!`n ì‹ ê·œ`në§¤ì…ë¦¬ìŠ¤íŠ¸ê°€ ì¶”ê°€ëìŠµë‹ˆë‹¤.`n ì…ê³ ë‚ ì§œëŠ”`n" í˜„ì¬ "`nì…ë‹ˆë‹¤. `n" nì¼ì2 "ì›”" ì¼ì2 "ì¼!!" ì¼ì3 "ìš”ì¼!!" ì‹œê°„1 "ì…ë‹ˆë‹¤.`n ë§¤ì…ë¦¬ìŠ¤íŠ¸ í™•ì¸í•´ì£¼ì„¸ìš”?"
+	}
+ClipWait, 2
 
 */
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Sleep, 100
+	SoundPlay, \\192.168.0.1\hdd2\ì¼ì •í‘œ ìµœê·¼\ì¼ì •í‘œ220730\sound\ì•Œë¦¼ìŒ24.mp3
 
-SoundPlay, \\192.168.0.1\hdd1\ÀÏÁ¤Ç¥ ÃÖ±Ù\ÀÏÁ¤Ç¥220730\sound\½Å±Ô¸®½ºÆ®.mp3
-ComObjCreate("SAPI.SpVoice").Speak("¾Ë¸²!¾Ë¸²!¾Ë¸²!" °Å·¡Ã³¸í1 "ÇöÀå ÀÇ ½Å±ÔÃâ°í¸®½ºÆ®°¡ Ãß°¡µÆ½À´Ï´Ù" )
-Sleep, 100
+		WinWait, Papago - Chrome,
+		IfWinNotActive, Papago - Chrome, , WinActivate, Papago - Chrome,
+		WinWaitActive, Papago - Chrome,
+Sleep, 1000
 
+	;~ ControlSend, , {Ctrl Down}v{Ctrl Up} , Papago - Chrome
 
-ComObjCreate("SAPI.SpVoice").Speak("Ãâ°í³¯Â¥´Â" )
-
-
-
-
-
-
-num1 := Round(A_tmrw)
-ÀÏÀÚ2 := Round(ÀÏÀÚ2)
-
-
-¿À´Ã1 := ÀÏÀÚ2 - num1
-;~ MsgBox, %A_tmrw%`n%ÀÏÀÚ2%`n%¿À´Ã1%`n%A_tmrw%`n%ÀÏÀÚ2%`n%¿À´Ã1%
-;~ MsgBox, %¿À´Ã1%
-if(¿À´Ã1 = 0)
-{
-	ComObjCreate("SAPI.SpVoice").Speak("¿À´Ã ÀÔ´Ï´Ù")
-}
-else if(¿À´Ã1 = 1)
-{
-	ComObjCreate("SAPI.SpVoice").Speak("³»ÀÏ ÀÔ´Ï´Ù")
-}
-
-else
-{
-
-}
-;~ return
+		;~ Sleep, 1000
+		ControlSend, , {tab 2}, Papago - Chrome
+		Sleep, 1000
+		ControlSend, , {Enter}, Papago - Chrome
+		Sleep, 1000
+	;~ ControlSend, , {Ctrl up} , Papago - Chrome
 
 
 
+		;~ WinWait, Papago - Chrome,
+		;~ IfWinNotActive, Papago - Chrome, , WinActivate, Papago - Chrome,
+		;~ WinWaitActive, Papago - Chrome,
 
 
 
-
-
-ComObjCreate("SAPI.SpVoice").Speak(nÀÏÀÚ2 "¿ù" ÀÏÀÚ2 "ÀÏ")
-Sleep, 100
-ComObjCreate("SAPI.SpVoice").Speak(ÀÏÀÚ3 "¿äÀÏ" )
-Sleep, 100
-
-ComObjCreate("SAPI.SpVoice").Speak(½Ã°£1 "ÀÔ´Ï´Ù")
-Sleep, 100
-ComObjCreate("SAPI.SpVoice").Speak("Ãâ°í¸®½ºÆ® È®ÀÎÇØÁÖ¼¼¿ä")
-
+	;~ Sleep,100
+	;~ ControlSend, , {Enter}, Papago - Chrome
+	;~ Sleep,1000
+		Clipboard =
+Clipboard := Clipboard1
+WinMinimize, Papago - Chrome
+Sleep, 22000
+winkill, ahk_exe chrome.exe
 ExitApp
+return
 
 
 
 
 
 
-; ¿äÀÏ ±¸ÇÏ±â ÇÔ¼ö
+; ìš”ì¼ êµ¬í•˜ê¸° í•¨ìˆ˜
 Get_Weekday(parmDate, parmMode)
 {
 if StrLen(parmDate) <> 8
@@ -374,13 +283,14 @@ return,""
 FormatTime,WeekDay,%parmDate%, ddd
 if parmMode = 1
 {
-objWeekDay := {"ÀÏ":1, "¿ù":2, "È­":3, "¼ö":4, "¸ñ":5, "±İ":6, "Åä":7}
+objWeekDay := {"ì¼":1, "ì›”":2, "í™”":3, "ìˆ˜":4, "ëª©":5, "ê¸ˆ":6, "í† ":7}
 ReturnString := objWeekDay [WeekDay]
 }
 else
 ReturnString := WeekDay
 return,ReturnString
 }
+
 
 
 ;vWDayStart: day defined as first day of week (Sun:1, Sat:7)
@@ -428,3 +338,82 @@ DateAdd(DateTime, Time, TimeUnits)
 	return DateTime
 }
 
+
+pwbget()
+{
+	try
+	{
+		; IE ì»´ ì˜¤ë¸Œì íŠ¸ê°€ ê°„í˜¹ê°€ë‹¤ê°€ ì˜¤ë¥˜ê°€ ë‚  ë•Œê°€ ìˆëŠ”ë°, ì´ ë•Œë¥¼ ìœ„í•´ Try-Catch êµ¬ë¬¸ì„ ì‚¬ìš©í–ˆì–´ìš”. ì™„ë²½í•˜ê²Œ ì¡ëŠ”ì§„ ëª¨ë¥´ê² ë„¤ìš”.
+		pwb := ComObjCreate("InternetExplorer.Application") ; create IE
+		return pwb
+	}
+	catch e
+	{
+		pwb:=""
+		sleep,100
+		pwbget()
+	}
+}
+
+IELoad(pwb)
+{
+    If !pwb    ;If wb is not a valid pointer then quit
+        Return False
+    Loop    ;Otherwise sleep for .1 seconds untill the page starts loading
+        Sleep,100
+    Until (pwb.busy)
+    Loop    ;Once it starts loading wait until completes
+        Sleep,100
+    Until (!pwb.busy)
+    Loop    ;optional check to wait for the page to completely load
+        Sleep,100
+    Until (pwb.Document.Readystate = "Complete")
+Return True
+}
+
+
+return
+
+; ===== ë¬¸ìì—´(ì‹œìŠ¤í…œ ANSI/CP949) -> UTF-8 percent-encoding (íŒŒíŒŒê³  text íŒŒë¼ë¯¸í„°ìš©) =====
+PublishIntegratedTts(text) {
+    if (text = "")
+        return false
+    EnvGet, userProfile, USERPROFILE
+    helper := userProfile "\tms_new\scripts\tts-listener\publish-legacy-tts.js"
+    if !FileExist(helper)
+        return false
+    tempFile := A_Temp "\reader_tts_" A_TickCount ".txt"
+    FileDelete, %tempFile%
+    FileAppend, %text%, %tempFile%, UTF-8
+    if ErrorLevel
+        return false
+    EnvGet, comspecPath, ComSpec
+    if (comspecPath = "")
+        comspecPath := "cmd.exe"
+    cmd := """" comspecPath """ /c node """ helper """ """ tempFile """"
+    RunWait, %cmd%,, Hide
+    if (ErrorLevel = 0)
+        return true
+    return false
+}
+UrlEncodeUtf8(str) {
+    nW := DllCall("MultiByteToWideChar", "UInt", 0, "UInt", 0, "AStr", str, "Int", -1, "Ptr", 0, "Int", 0)
+    VarSetCapacity(wbuf, nW*2, 0)
+    DllCall("MultiByteToWideChar", "UInt", 0, "UInt", 0, "AStr", str, "Int", -1, "Ptr", &wbuf, "Int", nW)
+    nU := DllCall("WideCharToMultiByte", "UInt", 65001, "UInt", 0, "Ptr", &wbuf, "Int", -1, "Ptr", 0, "Int", 0, "Ptr", 0, "Ptr", 0)
+    VarSetCapacity(u8, nU, 0)
+    DllCall("WideCharToMultiByte", "UInt", 65001, "UInt", 0, "Ptr", &wbuf, "Int", -1, "Ptr", &u8, "Int", nU, "Ptr", 0, "Ptr", 0)
+    hexChars := "0123456789ABCDEF"
+    out := ""
+    Loop, % nU-1 {
+        b := NumGet(u8, A_Index-1, "UChar")
+        if ((b>=0x30 && b<=0x39) || (b>=0x41 && b<=0x5A) || (b>=0x61 && b<=0x7A) || b=0x2D || b=0x5F || b=0x2E || b=0x7E)
+            out .= Chr(b)
+        else {
+            hi := (b >> 4) & 0xF
+            lo := b & 0xF
+            out .= "%" SubStr(hexChars, hi+1, 1) SubStr(hexChars, lo+1, 1)
+        }
+    }
+    return out
+}

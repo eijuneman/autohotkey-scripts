@@ -235,6 +235,7 @@ MenuHandler:
 if (A_ThisMenuItemPos = 1)
 {
  ; No Border Clipboard: copy without border/padding (crop 3px each side)
+ Sleep 300 ; 우클릭 메뉴가 완전히 사라질 때까지 대기 — 안 하면 "1 No Border Clipboard" 메뉴 텍스트가 캡처에 같이 찍힘
  WinGet, nbHwnd, ID, A
  WinGetPos, nbX, nbY, nbW, nbH, ahk_id %nbHwnd%
  nbX+=3, nbY+=3, nbW-=6, nbH-=6

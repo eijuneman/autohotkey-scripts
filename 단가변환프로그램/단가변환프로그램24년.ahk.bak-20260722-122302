@@ -1,0 +1,1364 @@
+﻿;====================================================================
+;
+; Programmer: shwoodkim
+; AutoHotkey: v1.1.03.00 (autohotkey_L ANSI version)
+;
+;====================================================================
+#NoEnv
+#SingleInstance, force
+#Include csv.ahk
+SetControlDelay 5
+
+        Winwait, ahk_exe JedaeroM.exe
+        IfWinNotActive, ahk_exe JedaeroM.exe,
+        WinActivate, ahk_exe JedaeroM.exe
+
+        Sleep, 200
+        ControlClick, x21 y39, ahk_exe JedaeroM.exe
+
+        send, {esc 10}{alt}{enter}
+        send, {Right 3}{down 4}{enter}
+
+VERSION := 2.0
+ProductRows := Object()
+ProductDisplayToName := Object()
+SelectedProductCode := ""
+SelectedProductName := ""
+SelectedProductSpec := ""
+SelectedProductMid := ""
+SelectedProductSub := ""
+SelectedProductMode := false
+SelectedPriceTableRow := 0
+DEFAULT_INI_FILE := A_ScriptDir "\단가변환프로그램.ini"
+PRODUCT_PRICE_INI := A_ScriptDir "\상품별단가변환.ini"
+PRICE_TABLE_CSV := A_ScriptDir "\단가변환표.csv"
+INI_FILE := DEFAULT_INI_FILE
+
+RegExMatch(A_ScriptName, "^(.*?)\.", basename)    ; dont use splitpath to get basename because it cant handle DeltaRush.1.3.exe
+WINTITLE := basename1 " " VERSION
+
+;outputdebug DBGVIEWCLEAR
+
+;============================================================
+; 1. When this ahk program is compiled into an exe, fileinstall indicates which files should be embedded inside the exe.1
+; 2. When the program is run, fileinstall extracts the embedded file to the specified folder.
+;============================================================
+
+RegExMatch(A_ScriptName, "^(.*?)\.", basename)    ; dont use splitpath
+
+if Not InStr(FileExist(A_ScriptDir), "D")
+    FileCreateDir , %A_ScriptDir%
+
+;============================================================
+; Build gui:
+;============================================================
+Gui, +alwaysontop
+Gui, Font, s10, Malgun Gothic
+Gui, Add, GroupBox, x20 y15 w505 h140, 프리셋 / 상품 검색
+Gui, Add, GroupBox, x20 y170 w505 h135, 단가 입력
+Gui, Add, GroupBox, x20 y320 w505 h130, 실행 / 상품별 단가
+Gui, Add, GroupBox, x545 y15 w755 h370, 상품 검색 결과
+Gui, Add, GroupBox, x545 y400 w755 h310, 단가변환표.csv 편집
+
+Gui, Add, Text, x45 y43 w75 h23, [중-소]분류
+Gui, Add, ComboBox, x130 y39 w255 h160 vfrmSAVEDPRESET gPresetChange
+Gui, Add, Button, x400 y38 h29 w55 gSavePreset, 저장
+Gui, Add, Button, x465 y38 h29 w45 gDeletePreset vDELETEBUTTON, 삭제
+
+Gui, Add, Text, x45 y82 w75 h23, 상품검색
+Gui, Add, Edit, x130 y78 w220 h29 vProductSearch,
+Gui, Add, Button, x360 y77 h31 w55 gLoadProductList, 검색
+Gui, Add, Button, x425 y77 h31 w85 gFindSelectedProduct, 상품찾기
+Gui, Add, ComboBox, x130 y117 w255 h160 vProductSelect gProductSelectChange
+Gui, Add, Button, x400 y116 h31 w110 gStartSelectedProduct, 선택상품변환
+
+Gui, Add, ListView, x565 y42 w715 h320 vProductLV gProductLVClick Grid -Multi, 상품코드|상품명|규격|중분류|소분류
+
+Gui, Add, Text, x105 y200 w70 h23 Center, 중분류
+Gui, Add, Text, x185 y200 w90 h23 Center, 소분류
+Gui, Add, Text, x300 y200 w38 h23 Center, C
+Gui, Add, Text, x345 y200 w38 h23 Center, 소매
+Gui, Add, Text, x390 y200 w38 h23 Center, B
+Gui, Add, Text, x435 y200 w38 h23 Center, 매출
+Gui, Add, Text, x480 y200 w38 h23 Center, A
+
+Gui, Add, Text, x45 y229 w50 h27, 분류
+Gui, Add, Edit, x105 y225 w70 h30 v중분류,
+Gui, Add, Edit, x185 y225 w90 h30 v소분류y값,
+Gui, Add, Edit, x300 y225 w38 h30 vC,
+Gui, Add, Edit, x345 y225 w38 h30 v소매,
+Gui, Add, Edit, x390 y225 w38 h30 vB,
+Gui, Add, Edit, x435 y225 w38 h30 v매출,
+Gui, Add, Edit, x480 y225 w38 h30 vA,
+
+Gui, Add, Button, x55 y353 h42 w85 gStart, ALL 변환
+Gui, Add, Button, x153 y353 h42 w85 gStartpick, 단독변환
+Gui, Add, Button, x287 y353 h42 w85 grunexcel, 엑셀 열기
+Gui, Add, Button, x385 y353 h42 w85 greload, 재시작
+Gui, Add, Text, x55 y410 w85 h25, 상품별 단가
+Gui, Add, Button, x153 y405 h34 w95 gSaveProductPrice, 단가저장
+Gui, Add, Button, x258 y405 h34 w105 gLoadProductPrice, 단가불러오기
+
+Gui, Add, Button, x565 y425 h30 w85 gLoadPriceTableList, 새로고침
+Gui, Add, Button, x660 y425 h30 w75 gOpenPriceTableFile, 파일열기
+Gui, Add, Text, x750 y430 w530 h23 vPriceTablePathText, %PRICE_TABLE_CSV%
+Gui, Add, ListView, x565 y462 w715 h145 vPriceTableLV gPriceTableLVClick Grid -Multi, 프리셋|중분류|소분류|A|매출|B|소매|C
+
+Gui, Add, Text, x565 y623 w220 h20 Center, 프리셋
+Gui, Add, Text, x795 y623 w50 h20 Center, 중분류
+Gui, Add, Text, x852 y623 w55 h20 Center, 소분류
+Gui, Add, Text, x914 y623 w40 h20 Center, A
+Gui, Add, Text, x960 y623 w40 h20 Center, 매출
+Gui, Add, Text, x1006 y623 w40 h20 Center, B
+Gui, Add, Text, x1052 y623 w40 h20 Center, 소매
+Gui, Add, Text, x1098 y623 w40 h20 Center, C
+Gui, Add, Edit, x565 y645 w220 h29 vPresetCsvName,
+Gui, Add, Edit, x795 y645 w50 h29 vPresetCsvMid,
+Gui, Add, Edit, x852 y645 w55 h29 vPresetCsvSub,
+Gui, Add, Edit, x914 y645 w40 h29 vPresetCsvA,
+Gui, Add, Edit, x960 y645 w40 h29 vPresetCsvSales,
+Gui, Add, Edit, x1006 y645 w40 h29 vPresetCsvB,
+Gui, Add, Edit, x1052 y645 w40 h29 vPresetCsvRetail,
+Gui, Add, Edit, x1098 y645 w40 h29 vPresetCsvC,
+Gui, Add, Button, x1150 y642 h32 w60 gSavePriceTableRow, 저장
+Gui, Add, Button, x1220 y642 h32 w60 gDeletePriceTableRow, 삭제
+
+Gui, Add, StatusBar
+
+Gui, ListView, ProductLV
+LV_ModifyCol(1, 75)
+LV_ModifyCol(2, 230)
+LV_ModifyCol(3, 140)
+LV_ModifyCol(4, 85)
+LV_ModifyCol(5, 80)
+Gui, ListView, PriceTableLV
+LV_ModifyCol(1, 220)
+LV_ModifyCol(2, 58)
+LV_ModifyCol(3, 58)
+LV_ModifyCol(4, 45)
+LV_ModifyCol(5, 45)
+LV_ModifyCol(6, 45)
+LV_ModifyCol(7, 45)
+LV_ModifyCol(8, 45)
+
+;~ GetXY(winx, winy)
+Gui, Show,x330 y250 w1320 h745,%WINTITLE%
+
+GoSub, UpdatePresetList  ; update drop down to show all preset section names in ini file
+GoSub, LoadPriceTableList
+
+return
+
+;============================================================
+; do a guirestore for newly selected preset
+;============================================================
+
+
+
+runexcel:
+{
+
+	run, %A_ScriptDir%\세이브 INI리스트 (메크로 포함).xlsm
+
+return
+}
+
+
+LoadProductList:
+    gui, submit, nohide
+    LoadProductsFromMysql(ProductSearch)
+Return
+
+ProductSelectChange:
+    gui, submit, nohide
+    if (ProductSelect != "") {
+        SetSelectedProductFromDisplay(ProductSelect)
+        LoadSelectedProductPrice(false)
+        SB_SetText("선택: " ProductSelect)
+    }
+Return
+
+ProductLVClick:
+    Gui, ListView, ProductLV
+    selectedRow := LV_GetNext()
+    if (selectedRow = 0)
+        Return
+
+    LV_GetText(productCode, selectedRow, 1)
+    LV_GetText(productName, selectedRow, 2)
+    LV_GetText(productSpec, selectedRow, 3)
+    LV_GetText(productMid, selectedRow, 4)
+    LV_GetText(productSub, selectedRow, 5)
+    display := CleanComboText(productName " / " productSpec " / " productMid "-" productSub " [" productCode "]")
+    SetSelectedProduct(productCode, productName, productSpec, productMid, productSub)
+    GuiControl, , ProductSelect, %display%
+    SB_SetText("선택: " display)
+    LoadSelectedProductPrice(false)
+
+    if (A_GuiEvent = "DoubleClick")
+        SearchJedaeroProduct(productName)
+Return
+
+FindSelectedProduct:
+    gui, submit, nohide
+    productName := GetSelectedProductName()
+    if (productName = "") {
+        MsgBox, 48, 상품찾기, 상품을 선택하거나 검색어를 입력해주세요.
+        Return
+    }
+    SearchJedaeroProduct(productName)
+Return
+
+StartSelectedProduct:
+    gui, submit, nohide
+    productName := GetSelectedProductName()
+    if (productName = "") {
+        MsgBox, 48, 선택상품변환, 상품을 선택하거나 검색어를 입력해주세요.
+        Return
+    }
+    SaveSelectedProductPrice(false)
+    SearchJedaeroProduct(productName)
+    SelectedProductMode := true
+    Gosub, Startpick
+    SelectedProductMode := false
+Return
+
+LoadPriceTableList:
+    LoadPriceTableRows()
+Return
+
+PriceTableLVClick:
+    Gui, ListView, PriceTableLV
+    selectedRow := LV_GetNext()
+    if (selectedRow = 0)
+        Return
+
+    SelectedPriceTableRow := selectedRow
+    LV_GetText(csvName, selectedRow, 1)
+    LV_GetText(csvMid, selectedRow, 2)
+    LV_GetText(csvSub, selectedRow, 3)
+    LV_GetText(csvA, selectedRow, 4)
+    LV_GetText(csvSales, selectedRow, 5)
+    LV_GetText(csvB, selectedRow, 6)
+    LV_GetText(csvRetail, selectedRow, 7)
+    LV_GetText(csvC, selectedRow, 8)
+    SetPriceTableEditFields(csvName, csvMid, csvSub, csvA, csvSales, csvB, csvRetail, csvC)
+    ApplyPresetValuesToMainFields(csvName, csvMid, csvSub, csvA, csvSales, csvB, csvRetail, csvC)
+Return
+
+SavePriceTableRow:
+    Gui, Submit, NoHide
+    SavePriceTableRowData()
+Return
+
+DeletePriceTableRow:
+    Gui, Submit, NoHide
+    DeletePriceTableRowData()
+Return
+
+OpenPriceTableFile:
+    Run, notepad.exe "%PRICE_TABLE_CSV%"
+Return
+
+SaveProductPrice:
+    SaveSelectedProductPrice(true)
+Return
+
+LoadProductPrice:
+    if !LoadSelectedProductPrice(true)
+        MsgBox, 48, 상품별 단가, 저장된 상품별 단가가 없습니다.
+Return
+
+
+
+PresetChange:
+
+    gui, submit, nohide
+
+
+
+        Loop, % Rows
+            {
+             founds:=CSV_Search("data1",frmSAVEDPRESET,A_Index)
+             if founds=0
+                break
+             founds:=StrSplit(founds,",")
+                r2:=CSV_ReadCell("data1",founds[1],2) ;
+                r3:=CSV_ReadCell("data1",founds[1],3) ;
+                r4:=CSV_ReadCell("data1",founds[1],4) ;
+                r5:=CSV_ReadCell("data1",founds[1],5) ;
+                r6:=CSV_ReadCell("data1",founds[1],6) ;
+                r7:=CSV_ReadCell("data1",founds[1],7) ;
+                r8:=CSV_ReadCell("data1",founds[1],8) ;
+                ;~ LV_Add("", r31, r29, r30, r2, r31, r0)
+
+                GuiControl, , 중분류, %r2%
+                GuiControl, , 소분류y값, %r3%
+                GuiControl, , A, %r4%
+                GuiControl, , 매출, %r5%
+                GuiControl, , B, %r6%
+                GuiControl, , 소매, %r7%
+                GuiControl, , C, %r8%
+
+            }
+Return
+
+;============================================================
+; save preset to presets.ini
+;============================================================
+
+SavePreset:
+
+Return
+
+;============================================================
+; delete selected preset section from presets.ini
+;============================================================
+
+DeletePreset:
+
+Return
+
+;============================================================
+; update drop down to show all preset section names in ini file, except section1
+;============================================================
+
+UpdatePresetList:
+
+        gui, submit, nohide
+
+        csvfile0 = %PRICE_TABLE_CSV%
+
+        ;~ csv_Save(csvfile0,"data1")
+        csv_Load(csvfile0,"data1")
+
+
+
+    GuiControl, , frmSAVEDPRESET, |  ; delete list
+
+Rows:=CSV_TotalRows("data1")
+TR1=
+real=0
+Loop, %Rows%{
+    TR1 .= CSV_ReadCell("data1",A_Index,1) "|"
+}
+
+    ;~ MsgBox, % TR1
+    ;~ GuiControl, , frmSAVEDPRESET,   ; update the control
+    GuiControl, , frmSAVEDPRESET, % "|" TR1  ; update the control
+
+Return
+
+
+
+Return
+
+;============================================================
+; when you click x or close button
+;============================================================
+
+GuiClose:
+
+    Gui, Submit, NoHide      ; update control variables
+
+ExitApp
+
+;============================================================
+; Return window x and y position from ini file.
+;============================================================
+
+
+
+start:
+{
+
+Gui, submit, nohide
+
+    var1 := 0
+
+        Control, Choose, 3, TRzComboBox9, ahk_exe JedaeroM.exe
+
+        ;~ Loop,61
+        Loop, %Rows%
+        {
+
+
+        var1++
+
+
+        presetName := CSV_ReadCell("data1", var1, 1)
+        s1 := CSV_ReadCell("data1", var1, 2)
+        s2 := CSV_ReadCell("data1", var1, 3)
+        priceA := CSV_ReadCell("data1", var1, 4)
+        priceSales := CSV_ReadCell("data1", var1, 5)
+        priceB := CSV_ReadCell("data1", var1, 6)
+        priceRetail := CSV_ReadCell("data1", var1, 7)
+        priceC := CSV_ReadCell("data1", var1, 8)
+
+        GuiControl, , frmSAVEDPRESET, %presetName%
+        GuiControl, , 중분류, %s1%
+        GuiControl, , 소분류y값, %s2%
+        GuiControl, , A, %priceA%
+        GuiControl, , 매출, %priceSales%
+        GuiControl, , B, %priceB%
+        GuiControl, , 소매, %priceRetail%
+        GuiControl, , C, %priceC%
+
+        Sleep, 500
+
+
+
+
+        Sleep, 200
+
+
+
+
+        Control, Choose, %s1%, TRzComboBox9, ahk_exe JedaeroM.exe
+        Sleep, 200
+        ControlClick, TDBGridEh2, ahk_exe JedaeroM.exe, , , , x53 y60
+        Sleep, 200
+        ControlClick, TDBGridEh2, ahk_exe JedaeroM.exe, , , , x53 y%s2%
+
+
+        ;~ MsgBox %s2%
+
+
+        Sleep, 200
+        ApplyPriceValues(priceC, priceRetail, priceB, priceSales, priceA)
+        ControlClick, TAdvToolBar2, ahk_exe JedaeroM.exe, , , , X137 y16
+        SLEEP, 200
+
+        WinWait, 일괄저장,
+        IfWinNotActive, 일괄저장, , WinActivate, 일괄저장,
+        WinWaitActive, 일괄저장,
+        Sleep, 200
+
+        ControlClick, Button1, 일괄저장
+        Sleep, 100
+
+        WinWait, 저장 확인,
+        IfWinNotActive, 저장 확인, , WinActivate, 저장 확인,
+        WinWaitActive, 저장 확인,
+        Sleep, 100
+
+        ControlClick, Button1, 저장 확인
+        Sleep, 100
+
+
+        Sleep, 200
+
+        }
+
+}
+     return
+
+Startpick:
+{
+        gui, submit, nohide
+        s1 := 중분류
+        s2 := 소분류y값
+        priceC := C
+        priceRetail := 소매
+        priceB := B
+        priceSales := 매출
+        priceA := A
+
+        Sleep, 200
+
+        if (SelectedProductMode) {
+            ControlClick, TDBGridEh2, ahk_class TfmMain, , , , x53 y60
+            Sleep, 400
+        } else {
+            Control, Choose, %s1%, TRzComboBox9, ahk_exe JedaeroM.exe
+            Sleep, 200
+            ControlClick, TDBGridEh2, ahk_class TfmMain, , , , x53 y60
+            Sleep, 200
+            ControlClick, TDBGridEh2, ahk_class TfmMain, , , , x53 y%s2%
+            Sleep, 400
+
+            MsgBox, 멈춰`n%s2%
+        }
+
+
+
+        ApplyPriceValues(priceC, priceRetail, priceB, priceSales, priceA)
+        ControlClick, TAdvToolBar2, ahk_exe JedaeroM.exe, , , , X137 y16
+        SLEEP, 200
+
+        WinWait, 일괄저장,
+        IfWinNotActive, 일괄저장, , WinActivate, 일괄저장,
+        WinWaitActive, 일괄저장,
+        Sleep, 200
+
+        ControlClick, Button1, 일괄저장
+        Sleep, 100
+
+        WinWait, 저장 확인,
+        IfWinNotActive, 저장 확인, , WinActivate, 저장 확인,
+        WinWaitActive, 저장 확인,
+        Sleep, 100
+
+        ControlClick, Button1, 저장 확인
+        Sleep, 100
+
+
+        Sleep, 200
+
+
+
+}
+     return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;====================================================================================================================
+;====================================================================================================================
+;====================================================================================================================
+;====================================================================================================================
+;====================================================================================================================
+;                                                                                                                   \
+;                                                  base function                                                    \
+;                                                                                                                   \
+;====================================================================================================================
+;====================================================================================================================
+;====================================================================================================================
+;====================================================================================================================
+;====================================================================================================================
+
+
+
+
+
+
+reload:
+{
+    Reload
+}
+return
+
+SetSelectedProductFromDisplay(display)
+{
+    global ProductRows, SelectedProductName
+
+    if (ProductRows.HasKey(display)) {
+        row := ProductRows[display]
+        SetSelectedProduct(row["code"], row["name"], row["spec"], row["mid"], row["sub"])
+        return
+    }
+
+    SelectedProductName := GetSelectedProductName()
+}
+
+SetSelectedProduct(code, name, spec := "", mid := "", sub := "")
+{
+    global SelectedProductCode, SelectedProductName, SelectedProductSpec, SelectedProductMid, SelectedProductSub
+
+    SelectedProductCode := code
+    SelectedProductName := name
+    SelectedProductSpec := spec
+    SelectedProductMid := mid
+    SelectedProductSub := sub
+}
+
+GetSelectedProductSection()
+{
+    global SelectedProductCode, SelectedProductName
+
+    if (SelectedProductCode != "")
+        return "상품_" SelectedProductCode
+
+    if (SelectedProductName != "")
+        return "상품명_" CleanIniSectionName(SelectedProductName)
+
+    return ""
+}
+
+CleanIniSectionName(value)
+{
+    value := StrReplace(value, "[", "(")
+    value := StrReplace(value, "]", ")")
+    value := StrReplace(value, "`r", " ")
+    value := StrReplace(value, "`n", " ")
+    return Trim(value)
+}
+
+SaveSelectedProductPrice(showMessage := true)
+{
+    global PRODUCT_PRICE_INI, INI_FILE, SelectedProductCode, SelectedProductName, SelectedProductSpec, SelectedProductMid, SelectedProductSub
+    global C, 소매, B, 매출, A, 중분류, 소분류y값
+
+    Gui, Submit, NoHide
+    section := GetSelectedProductSection()
+    if (section = "") {
+        if (showMessage)
+            MsgBox, 48, 상품별 단가, 상품을 먼저 선택해주세요.
+        return false
+    }
+
+    SaveConfigValue(PRODUCT_PRICE_INI, section, "상품코드", SelectedProductCode)
+    SaveConfigValue(PRODUCT_PRICE_INI, section, "상품명", SelectedProductName)
+    SaveConfigValue(PRODUCT_PRICE_INI, section, "규격", SelectedProductSpec)
+    SaveConfigValue(PRODUCT_PRICE_INI, section, "중분류명", SelectedProductMid)
+    SaveConfigValue(PRODUCT_PRICE_INI, section, "소분류명", SelectedProductSub)
+    SaveConfigValue(PRODUCT_PRICE_INI, section, "중분류", 중분류)
+    SaveConfigValue(PRODUCT_PRICE_INI, section, "소분류y값", 소분류y값)
+    SaveConfigValue(PRODUCT_PRICE_INI, section, "C", C)
+    SaveConfigValue(PRODUCT_PRICE_INI, section, "소매", 소매)
+    SaveConfigValue(PRODUCT_PRICE_INI, section, "B", B)
+    SaveConfigValue(PRODUCT_PRICE_INI, section, "매출", 매출)
+    SaveConfigValue(PRODUCT_PRICE_INI, section, "A", A)
+
+    if (INI_FILE = PRODUCT_PRICE_INI)
+        LoadIniRows()
+
+    SB_SetText("상품별 단가 저장: " SelectedProductName)
+    if (showMessage)
+        MsgBox, 64, 상품별 단가, 상품별 단가를 저장했습니다.
+
+    return true
+}
+
+LoadSelectedProductPrice(showMessage := true)
+{
+    global PRODUCT_PRICE_INI, SelectedProductName
+
+    section := GetSelectedProductSection()
+    if (section = "" || !FileExist(PRODUCT_PRICE_INI))
+        return false
+
+    priceC := ReadConfigValue(PRODUCT_PRICE_INI, section, "C", "ERROR")
+    if (priceC = "ERROR")
+        return false
+
+    priceRetail := ReadConfigValue(PRODUCT_PRICE_INI, section, "소매", "")
+    priceB := ReadConfigValue(PRODUCT_PRICE_INI, section, "B", "")
+    priceSales := ReadConfigValue(PRODUCT_PRICE_INI, section, "매출", "")
+    priceA := ReadConfigValue(PRODUCT_PRICE_INI, section, "A", "")
+    categoryIndex := ReadConfigValue(PRODUCT_PRICE_INI, section, "중분류", "")
+    rowY := ReadConfigValue(PRODUCT_PRICE_INI, section, "소분류y값", "")
+
+    if (categoryIndex != "")
+        GuiControl, , 중분류, %categoryIndex%
+    if (rowY != "")
+        GuiControl, , 소분류y값, %rowY%
+    GuiControl, , C, %priceC%
+    GuiControl, , 소매, %priceRetail%
+    GuiControl, , B, %priceB%
+    GuiControl, , 매출, %priceSales%
+    GuiControl, , A, %priceA%
+
+    SB_SetText("상품별 단가 불러옴: " SelectedProductName)
+    return true
+}
+
+GetSelectedProductName()
+{
+    global ProductSelect, ProductSearch, ProductDisplayToName, SelectedProductName
+
+    if (SelectedProductName != "")
+        return SelectedProductName
+
+    if (ProductSelect != "" && ProductDisplayToName.HasKey(ProductSelect))
+        return ProductDisplayToName[ProductSelect]
+
+    if (ProductSelect != "")
+        return ProductSelect
+
+    return ProductSearch
+}
+
+LoadProductsFromMysql(searchText := "")
+{
+    global ProductRows, ProductDisplayToName, SelectedProductCode, SelectedProductName, SelectedProductSpec, SelectedProductMid, SelectedProductSub
+
+    ProductRows := Object()
+    ProductDisplayToName := Object()
+    SelectedProductCode := ""
+    SelectedProductName := ""
+    SelectedProductSpec := ""
+    SelectedProductMid := ""
+    SelectedProductSub := ""
+    cleanSearch := Trim(searchText)
+    helper := A_ScriptDir "\product-search.js"
+    outFile := A_Temp "\jedaero-product-search.tsv"
+
+    if !FileExist(helper) {
+        MsgBox, 16, 상품조회 실패, %helper% 파일이 없습니다.
+        return
+    }
+
+    FileDelete, %outFile%
+    command := "node """ helper """ """ cleanSearch """ """ outFile """"
+    RunWait, %command%, C:\Users\shwoodnew\tms_new, Hide UseErrorLevel
+
+    if (ErrorLevel != 0) {
+        MsgBox, 16, MySQL 상품조회 실패, Node 상품조회 실행에 실패했습니다.`nErrorLevel: %ErrorLevel%
+        return
+    }
+
+    if !FileExist(outFile) {
+        MsgBox, 16, MySQL 상품조회 실패, 조회 결과 파일을 만들지 못했습니다.
+        return
+    }
+
+    FileRead, productText, *P65001 %outFile%
+    productList := ""
+    rowCount := 0
+    firstDisplay := ""
+    firstCode := ""
+    firstName := ""
+    firstSpec := ""
+    firstMid := ""
+    firstSub := ""
+
+    Gui, ListView, ProductLV
+    LV_Delete()
+
+    Loop, Parse, productText, `n, `r
+    {
+        if (A_LoopField = "")
+            continue
+
+        cols := StrSplit(A_LoopField, "`t")
+        code := cols[1]
+        name := cols[2]
+        spec := cols[3]
+        mid := cols[4]
+        sub := cols[5]
+
+        rowCount++
+        display := CleanComboText(name " / " spec " / " mid "-" sub " [" code "]")
+        ProductRows[display] := Object("code", code, "name", name, "spec", spec, "mid", mid, "sub", sub)
+        ProductDisplayToName[display] := name
+        productList .= display "|"
+        LV_Add("", code, name, spec, mid, sub)
+        if (rowCount = 1) {
+            firstDisplay := display
+            firstCode := code
+            firstName := name
+            firstSpec := spec
+            firstMid := mid
+            firstSub := sub
+        }
+    }
+
+    LV_ModifyCol(1, 75)
+    LV_ModifyCol(2, 230)
+    LV_ModifyCol(3, 140)
+    LV_ModifyCol(4, 85)
+    LV_ModifyCol(5, 80)
+
+    GuiControl, , ProductSelect, |%productList%
+    if (rowCount > 0) {
+        GuiControl, Choose, ProductSelect, 1
+        LV_Modify(1, "Select Focus Vis")
+        SetSelectedProduct(firstCode, firstName, firstSpec, firstMid, firstSub)
+        GuiControl, , ProductSelect, %firstDisplay%
+        LoadSelectedProductPrice(false)
+        SB_SetText("상품 " rowCount "개 조회됨")
+    } else {
+        SB_SetText("조회된 상품이 없습니다")
+    }
+}
+
+CleanComboText(value)
+{
+    value := StrReplace(value, "|", " ")
+    value := StrReplace(value, "`r", " ")
+    value := StrReplace(value, "`n", " ")
+    return Trim(value)
+}
+
+SearchJedaeroProduct(productName)
+{
+    productName := Trim(productName)
+    if (productName = "")
+        return
+
+    WinWait, ahk_class TfmMain, , 3
+    IfWinNotActive, ahk_class TfmMain, , WinActivate, ahk_class TfmMain
+    WinWaitActive, ahk_class TfmMain, , 3
+
+    ControlFocus, TRzEdit2, ahk_class TfmMain
+    Sleep, 100
+    ControlSetText, TRzEdit2, %productName%, ahk_class TfmMain
+    Sleep, 100
+    ControlSend, TRzEdit2, {Enter}, ahk_class TfmMain
+    Sleep, 700
+    SB_SetText("제대로 검색: " productName)
+}
+
+ApplyPriceValues(priceC, priceRetail, priceB, priceSales, priceA)
+{
+    ControlClick, TRzGroupButton2, ahk_exe JedaeroM.exe
+    Sleep, 200
+    ApplyOnePrice(priceC, 6, 4)
+    ApplyOnePrice(priceRetail, 4, 5)
+    ApplyOnePrice(priceB, 4, 3)
+    ApplyOnePrice(priceSales, 4, 1)
+    ApplyOnePrice(priceA, 4, 2)
+}
+
+ApplyOnePrice(priceValue, targetType, priceGrade)
+{
+    Control, Choose, %targetType%, TRzComboBox2, ahk_exe JedaeroM.exe
+    ControlSetText, TRzEdit1, %priceValue%, ahk_exe JedaeroM.exe
+    Control, Choose, %priceGrade%, TRzComboBox7, ahk_exe JedaeroM.exe
+    Control, Choose, 2, TRzComboBox6, ahk_exe JedaeroM.exe
+    Control, Choose, 3, TRzComboBox3, ahk_exe JedaeroM.exe
+    ControlClick, TRzBitBtn3, ahk_exe JedaeroM.exe
+    Sleep, 200
+}
+
+LoadPriceTableRows()
+{
+    global PRICE_TABLE_CSV, SelectedPriceTableRow
+
+    GuiControl, , PriceTablePathText, %PRICE_TABLE_CSV%
+    Gui, ListView, PriceTableLV
+    LV_Delete()
+    SelectedPriceTableRow := 0
+
+    if !FileExist(PRICE_TABLE_CSV) {
+        FileAppend, , %PRICE_TABLE_CSV%, UTF-8
+        SB_SetText("단가변환표.csv 새 파일 생성")
+        return
+    }
+
+    rowCount := 0
+    Loop, Read, %PRICE_TABLE_CSV%
+    {
+        line := A_LoopReadLine
+        if (Trim(line) = "")
+            continue
+
+        cols := ParseCsvLine(line)
+        if (cols.MaxIndex() < 8)
+            continue
+
+        LV_Add("", cols[1], cols[2], cols[3], cols[4], cols[5], cols[6], cols[7], cols[8])
+        rowCount++
+    }
+
+    ApplyPriceTableColumnWidths()
+    SB_SetText("단가변환표 " rowCount "개 항목 로드됨")
+}
+
+ApplyPriceTableColumnWidths()
+{
+    Gui, ListView, PriceTableLV
+    LV_ModifyCol(1, 220)
+    LV_ModifyCol(2, 58)
+    LV_ModifyCol(3, 58)
+    LV_ModifyCol(4, 45)
+    LV_ModifyCol(5, 45)
+    LV_ModifyCol(6, 45)
+    LV_ModifyCol(7, 45)
+    LV_ModifyCol(8, 45)
+}
+
+SetPriceTableEditFields(name, mid, sub, priceA, priceSales, priceB, priceRetail, priceC)
+{
+    GuiControl, , PresetCsvName, %name%
+    GuiControl, , PresetCsvMid, %mid%
+    GuiControl, , PresetCsvSub, %sub%
+    GuiControl, , PresetCsvA, %priceA%
+    GuiControl, , PresetCsvSales, %priceSales%
+    GuiControl, , PresetCsvB, %priceB%
+    GuiControl, , PresetCsvRetail, %priceRetail%
+    GuiControl, , PresetCsvC, %priceC%
+}
+
+ApplyPresetValuesToMainFields(name, mid, sub, priceA, priceSales, priceB, priceRetail, priceC)
+{
+    GuiControl, , frmSAVEDPRESET, %name%
+    GuiControl, , 중분류, %mid%
+    GuiControl, , 소분류y값, %sub%
+    GuiControl, , A, %priceA%
+    GuiControl, , 매출, %priceSales%
+    GuiControl, , B, %priceB%
+    GuiControl, , 소매, %priceRetail%
+    GuiControl, , C, %priceC%
+}
+
+SavePriceTableRowData()
+{
+    global PRICE_TABLE_CSV, SelectedPriceTableRow
+    global PresetCsvName, PresetCsvMid, PresetCsvSub, PresetCsvA, PresetCsvSales, PresetCsvB, PresetCsvRetail, PresetCsvC
+
+    Gui, Submit, NoHide
+
+    if (Trim(PresetCsvName) = "") {
+        MsgBox, 48, 단가변환표 저장, 프리셋명을 입력해주세요.
+        return
+    }
+
+    rows := LoadPriceTableArray()
+    newLine := PriceTableCsvLine(PresetCsvName, PresetCsvMid, PresetCsvSub, PresetCsvA, PresetCsvSales, PresetCsvB, PresetCsvRetail, PresetCsvC)
+
+    if (SelectedPriceTableRow > 0 && SelectedPriceTableRow <= rows.MaxIndex()) {
+        rows[SelectedPriceTableRow] := newLine
+    } else {
+        rows.Push(newLine)
+        SelectedPriceTableRow := rows.MaxIndex()
+    }
+
+    savedRow := SelectedPriceTableRow
+    WritePriceTableArray(rows)
+    GoSub, UpdatePresetList
+    LoadPriceTableRows()
+    SelectedPriceTableRow := savedRow
+    Gui, ListView, PriceTableLV
+    LV_Modify(SelectedPriceTableRow, "Select Focus Vis")
+    ApplyPresetValuesToMainFields(PresetCsvName, PresetCsvMid, PresetCsvSub, PresetCsvA, PresetCsvSales, PresetCsvB, PresetCsvRetail, PresetCsvC)
+    SB_SetText("단가변환표 저장: " PresetCsvName)
+}
+
+DeletePriceTableRowData()
+{
+    global SelectedPriceTableRow
+
+    if (SelectedPriceTableRow <= 0) {
+        MsgBox, 48, 단가변환표 삭제, 삭제할 행을 선택해주세요.
+        return
+    }
+
+    rows := LoadPriceTableArray()
+    if (SelectedPriceTableRow > rows.MaxIndex()) {
+        MsgBox, 48, 단가변환표 삭제, 선택한 행을 찾지 못했습니다.
+        return
+    }
+
+    rows.RemoveAt(SelectedPriceTableRow)
+    WritePriceTableArray(rows)
+    SelectedPriceTableRow := 0
+    GoSub, UpdatePresetList
+    LoadPriceTableRows()
+    SetPriceTableEditFields("", "", "", "", "", "", "", "")
+    SB_SetText("단가변환표 행 삭제 완료")
+}
+
+LoadPriceTableArray()
+{
+    global PRICE_TABLE_CSV
+
+    rows := []
+    if !FileExist(PRICE_TABLE_CSV)
+        return rows
+
+    Loop, Read, %PRICE_TABLE_CSV%
+    {
+        line := A_LoopReadLine
+        if (Trim(line) != "")
+            rows.Push(line)
+    }
+
+    return rows
+}
+
+WritePriceTableArray(rows)
+{
+    global PRICE_TABLE_CSV
+
+    output := ""
+    for index, line in rows
+        output .= line "`r`n"
+
+    FileDelete, %PRICE_TABLE_CSV%
+    FileAppend, %output%, %PRICE_TABLE_CSV%, UTF-8
+}
+
+PriceTableCsvLine(name, mid, sub, priceA, priceSales, priceB, priceRetail, priceC)
+{
+    return CsvEscape(name) "," CsvEscape(mid) "," CsvEscape(sub) "," CsvEscape(priceA) "," CsvEscape(priceSales) "," CsvEscape(priceB) "," CsvEscape(priceRetail) "," CsvEscape(priceC) ",,"
+}
+
+LoadIniRows()
+{
+    global INI_FILE
+
+    GuiControl, , IniPathText, %INI_FILE%
+    Gui, ListView, IniLV
+    LV_Delete()
+    EnsureIniFile()
+
+    if !FileExist(INI_FILE) {
+        SB_SetText("INI 파일 없음: " INI_FILE)
+        return
+    }
+
+    rowCount := 0
+    Loop, Read, %INI_FILE%
+    {
+        line := A_LoopReadLine
+        trimmed := Trim(line)
+
+        if (trimmed = "")
+            continue
+
+        if (A_Index = 1 && IsCsvHeader(trimmed))
+            continue
+
+        cols := ParseCsvLine(line)
+        if (cols.MaxIndex() >= 3) {
+            section := cols[1]
+            key := cols[2]
+            value := cols[3]
+            LV_Add("", section, key, value)
+            rowCount++
+        }
+    }
+
+    LV_ModifyCol(1, 140)
+    LV_ModifyCol(2, 160)
+    LV_ModifyCol(3, 295)
+    SB_SetText("CSV " rowCount "개 항목 로드됨")
+}
+
+SaveIniValue(section, key, value)
+{
+    global INI_FILE
+
+    section := Trim(section)
+    key := Trim(key)
+    if (section = "" || key = "") {
+        MsgBox, 48, CSV 저장, 섹션과 키를 입력해주세요.
+        return
+    }
+
+    SaveConfigValue(INI_FILE, section, key, value)
+    LoadIniRows()
+    GuiControl, , IniSectionEdit, %section%
+    GuiControl, , IniKeyEdit, %key%
+    GuiControl, , IniValueEdit, %value%
+    SB_SetText("CSV 저장: [" section "] " key)
+}
+
+DeleteIniValue(section, key)
+{
+    global INI_FILE
+
+    section := Trim(section)
+    key := Trim(key)
+    if (section = "" || key = "") {
+        MsgBox, 48, CSV 삭제, 삭제할 섹션과 키를 선택해주세요.
+        return
+    }
+
+    if !FileExist(INI_FILE) {
+        MsgBox, 48, CSV 삭제, 파일이 없습니다.
+        return
+    }
+
+    DeleteConfigValue(INI_FILE, section, key)
+    GuiControl, , IniValueEdit,
+    LoadIniRows()
+    SB_SetText("CSV 삭제: [" section "] " key)
+}
+
+EnsureIniFile()
+{
+    global INI_FILE
+
+    EnsureCsvFile(INI_FILE)
+}
+
+EnsureCsvFile(filePath)
+{
+    SplitPath, filePath, , iniDir
+    if (iniDir != "" && !FileExist(iniDir))
+        FileCreateDir, %iniDir%
+
+    if !FileExist(filePath)
+        FileAppend, % CsvLine("섹션", "키", "값") "`r`n", %filePath%, UTF-8
+}
+
+SaveConfigValue(filePath, section, key, value)
+{
+    EnsureCsvFile(filePath)
+
+    FileRead, csvText, *P65001 %filePath%
+    output := CsvLine("섹션", "키", "값") "`r`n"
+    found := false
+
+    Loop, Parse, csvText, `n, `r
+    {
+        line := A_LoopField
+        trimmed := Trim(line)
+
+        if (trimmed = "" || IsCsvHeader(trimmed))
+            continue
+
+        cols := ParseCsvLine(line)
+        if (cols.MaxIndex() < 3)
+            continue
+
+        if (cols[1] = section && cols[2] = key) {
+            output .= CsvLine(section, key, value) "`r`n"
+            found := true
+        } else {
+            output .= CsvLine(cols[1], cols[2], cols[3]) "`r`n"
+        }
+    }
+
+    if (!found)
+        output .= CsvLine(section, key, value) "`r`n"
+
+    FileDelete, %filePath%
+    FileAppend, %output%, %filePath%, UTF-8
+}
+
+ReadConfigValue(filePath, section, key, defaultValue := "")
+{
+    if !FileExist(filePath)
+        return defaultValue
+
+    FileRead, csvText, *P65001 %filePath%
+    Loop, Parse, csvText, `n, `r
+    {
+        line := A_LoopField
+        trimmed := Trim(line)
+
+        if (trimmed = "" || IsCsvHeader(trimmed))
+            continue
+
+        cols := ParseCsvLine(line)
+        if (cols.MaxIndex() >= 3 && cols[1] = section && cols[2] = key)
+            return cols[3]
+    }
+
+    IniRead, legacyValue, %filePath%, %section%, %key%, %defaultValue%
+    return legacyValue
+}
+
+DeleteConfigValue(filePath, section, key)
+{
+    if !FileExist(filePath)
+        return
+
+    FileRead, csvText, *P65001 %filePath%
+    output := CsvLine("섹션", "키", "값") "`r`n"
+
+    Loop, Parse, csvText, `n, `r
+    {
+        line := A_LoopField
+        trimmed := Trim(line)
+
+        if (trimmed = "" || IsCsvHeader(trimmed))
+            continue
+
+        cols := ParseCsvLine(line)
+        if (cols.MaxIndex() < 3)
+            continue
+
+        if (cols[1] = section && cols[2] = key)
+            continue
+
+        output .= CsvLine(cols[1], cols[2], cols[3]) "`r`n"
+    }
+
+    FileDelete, %filePath%
+    FileAppend, %output%, %filePath%, UTF-8
+}
+
+CsvLine(field1, field2, field3)
+{
+    return CsvEscape(field1) "," CsvEscape(field2) "," CsvEscape(field3)
+}
+
+CsvEscape(value)
+{
+    value := StrReplace(value, """", """""")
+    return """" value """"
+}
+
+ParseCsvLine(line)
+{
+    fields := []
+    field := ""
+    inQuotes := false
+    i := 1
+    len := StrLen(line)
+
+    while (i <= len) {
+        ch := SubStr(line, i, 1)
+
+        if (ch = """") {
+            nextCh := SubStr(line, i + 1, 1)
+            if (inQuotes && nextCh = """") {
+                field .= """"
+                i += 2
+                continue
+            }
+            inQuotes := !inQuotes
+        } else if (ch = "," && !inQuotes) {
+            fields.Push(field)
+            field := ""
+        } else {
+            field .= ch
+        }
+        i++
+    }
+
+    fields.Push(field)
+    return fields
+}
+
+IsCsvHeader(line)
+{
+    cols := ParseCsvLine(line)
+    return (cols.MaxIndex() >= 3 && cols[1] = "섹션" && cols[2] = "키" && cols[3] = "값")
+}
+
+
+GetXY(byref winx, byref winy)
+{
+    global DEFAULT_INI_FILE
+
+    RegExMatch(A_ScriptName, "^(.*?)\.", basename)    ; dont use splitpath to get basename because it cant handle DeltaRush.1.3.exe
+
+;============================================================
+; position gui based on values from ini file
+;============================================================
+
+    winx := ReadConfigValue(DEFAULT_INI_FILE, "Window Position", "winx", 0)
+    winy := ReadConfigValue(DEFAULT_INI_FILE, "Window Position", "winy", 0)
+
+    ; get the width and height of the entire desktop (even if it spans multiple monitors)
+    SysGet, VirtualWidth, 78
+    SysGet, VirtualHeight, 79
+
+    ; prevent display of gui off-screen (somehow this was still happening to jess, so I added this logic)
+    if (winx < 0) OR (winx > VirtualWidth)
+        winx := 0
+
+    if (winy < 0) OR (winy > VirtualHeight)
+        winy := 0
+
+    Return
+
+}
+
+;============================================================
+; save all gui control values for active gui to ini file
+;============================================================
+
+GuiSave(inifile,section,begin="",end="")
+{
+    global DEFAULT_INI_FILE
+
+    SplitPath, inifile, file, path, ext, base, drive     ; splitpath expects paths with \
+
+    if (path = "") {   ; if no path given then use default path
+        RegExMatch(A_ScriptName, "^(.*?)\.", basename)    ; dont use splitpath to get basename because it cant handle DeltaRush.1.3.exe
+        inifile := DEFAULT_INI_FILE
+    }
+
+    WinGet, List_controls, ControlList, A    ; get list of all controls active gui
+
+    if (begin = "")
+        flag := 0
+    else
+        flag := 1
+
+    Loop, Parse, List_controls, `n
+    {
+        ;ControlGet, cid, hWnd,, %A_LoopField%         ; get the id of current control
+        GuiControlGet, textvalue,,%A_Loopfield%,Text  ; get associated text
+        GuiControlGet, vname, Name, %A_Loopfield%     ; get controls vname
+
+        If (vname = "")   ; only save controls which have a vname
+            continue
+
+        if (begin = vname) {
+            flag := 0
+            continue
+        }
+
+        if (flag)
+            continue
+
+        if (end = vname)
+            break
+
+        GuiControlGet, value ,, %A_Loopfield%         ; get controls value
+        value := RegExReplace(value, "`n", "|")       ; convert newlines to pipes (for multiline edit fields, because newlines are not valid for ini file)
+
+        ; todo: truncate edit values to not exceed ini fieldsize limit (1024?)  OR blank (all or nothing)
+
+        SaveConfigValue(inifile, section, vname, value)
+
+    }
+
+   return
+}
+
+;============================================================
+; Update gui controls with values from ini file.
+;============================================================
+
+GuiRestore(inifile,section)
+{
+    global DEFAULT_INI_FILE
+
+    SplitPath, inifile, file, path, ext, base, drive     ; splitpath expects paths with \
+
+    if (path = "") {   ; if no path given then use default path
+        RegExMatch(A_ScriptName, "^(.*?)\.", basename)    ; dont use splitpath to get basename because it cant handle DeltaRush.1.3.exe
+        inifile := DEFAULT_INI_FILE
+    }
+
+    ;============================================================
+    ; update gui controls with values from ini file
+    ;============================================================
+
+    WinGet, List_controls, ControlList, A   ; get list of all controls for active gui
+
+    Loop, Parse, List_controls, `n
+    {
+
+        ;ControlGet, cid, hWnd,, %A_LoopField%         ; get the id of current control
+        ;GuiControlGet, textvalue,,%A_Loopfield%,Text  ; get controls associated text
+        GuiControlGet, vname, Name, %A_Loopfield%     ; get controls vname
+        GuiControlGet, value ,, %A_Loopfield%         ; get controls value
+
+        If (vname = "")   ; only process controls which have a vname
+            continue
+
+        value := ReadConfigValue(inifile, section, vname, "ERROR")
+
+        if (value != "ERROR") {
+
+            value := RegExReplace(value, "\|", "`n")       ; convert pipes to newlines (for multiline edit fields, because newlines are not valid for ini file)
+
+            RegExMatch( A_Loopfield, "(.*?)\d+", name)   ; extract the control name without numbers
+            if (name1 = "ComboBox") {
+                GuiControl, ChooseString, %A_Loopfield%, %value%   ; select item in dropdownlist
+            } else {
+                GuiControl,  ,%A_Loopfield%, %value%    ; update the control
+            }
+        }
+
+    }
+
+    return
+
+}

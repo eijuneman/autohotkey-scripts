@@ -460,7 +460,7 @@ Controlsend, Edit12, %거래처명1%`n제품 출고해주세요`n%거래처명1%
 방송하기:
 {
 
-run, %A_ScriptDir%\readerspeaker2.ahk
+run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker2.ahk
 
 return
 }
@@ -2420,14 +2420,6 @@ else
 	}
 
 	; 폼 F5 저장 강제 (Firebird commit 대기)
-	; 전표메모 맨 앞에 ☎ 표시 (이미 있으면 skip — 재실행 중복 방지)
-	ControlGetText, memoCur, TRzDBEdit12, ahk_class TfmChitSale
-	if (SubStr(memoCur, 1, 1) != "☎")
-	{
-		ControlClick, TRzDBEdit12, ahk_class TfmChitSale
-		ControlSend, TRzDBEdit12, {Home}☎{Space 2}{Right}, ahk_class TfmChitSale
-		Sleep, 50
-	}
 	ControlSend, , {F5}, ahk_class TfmChitSale
 	Sleep, 500
 	; '재고 확인' 다이얼로그 뜨면 닫힐 때까지 대기 (최대 60초)
@@ -2536,8 +2528,6 @@ else
 		총금액 := 0
 	if (입금액 = "")
 		입금액 := 0
-	if (FillMissingPhoneFromGogaek(fbConn, 전화번호, g_pk))
-		ControlSetText, Edit8, %전화번호%, %WINTITLE%
 
 	; EXECUTE BLOCK + WHEN ANY DO: J_GITA 등 일부 행이 EUC-KR 멀티바이트 중간 잘림으로
 	; KSC_5601 CAST 실패하는 경우 해당 컬럼만 NULL 처리하고 행은 유지 (TMS firebirdScheduler.js 패턴)
@@ -2657,7 +2647,7 @@ else
 	}
 
 	; ===== tms_list UPSERT: 기존 행은 UPDATE(수량 같으면 출 보존, 다르면 NULL), 신규 행은 INSERT =====
-	myQuery := "INSERT INTO tms_list (ID, pk, 출, 내용, 수량, 단가, 공급대가, pdt_code, 비고, no) VALUES`n" . CONT1 . "`nON DUPLICATE KEY UPDATE`n  ID = VALUES(ID),`n  내용 = VALUES(내용),`n  단가 = VALUES(단가),`n  공급대가 = VALUES(공급대가),`n  pdt_code = VALUES(pdt_code),`n  비고 = VALUES(비고),`n  no = VALUES(no),`n  출 = CASE WHEN tms_list.ID != VALUES(ID) OR tms_list.수량 != VALUES(수량) THEN NULL ELSE tms_list.출 END,`n  수량 = VALUES(수량);"
+	myQuery := "INSERT INTO tms_list (ID, pk, 출, 내용, 수량, 단가, 공급대가, pdt_code, 비고, no) VALUES`n" . CONT1 . "`nON DUPLICATE KEY UPDATE`n  내용 = VALUES(내용),`n  단가 = VALUES(단가),`n  공급대가 = VALUES(공급대가),`n  pdt_code = VALUES(pdt_code),`n  비고 = VALUES(비고),`n  no = VALUES(no),`n  출 = CASE WHEN tms_list.수량 != VALUES(수량) THEN NULL ELSE tms_list.출 END,`n  수량 = VALUES(수량);"
 	result := dbQuery(myDB, myQuery)
 	if(errorCheck(result)){
 		MsgBox, % "tms_list UPSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
@@ -2683,9 +2673,9 @@ else
 	EnvSet, PATH, %A_EnvPath%;%UserProfile%\AppData\Local\Programs\Python\Python313\;%UserProfile%\AppData\Local\Programs\Python\Python313\Scripts\
 	Run, python "%UserProfile%\tms_new\send_custom_fcm.py" %ct_pk%
 
-	run, %A_ScriptDir%\readerspeaker.ahk
+	run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
 
-	SoundPlay, %A_ScriptDir%\F1.mp3
+	SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\F1.mp3
 	Sleep, 100
 
 	; INSERT 검증
@@ -2897,14 +2887,6 @@ return
 	}
 
 	; 폼 F5 저장 강제 (Firebird commit 대기)
-	; 전표메모 맨 앞에 ☎ 표시 (이미 있으면 skip — 재실행 중복 방지)
-	ControlGetText, memoCur, TRzDBEdit12, ahk_class TfmChitSale
-	if (SubStr(memoCur, 1, 1) != "☎")
-	{
-		ControlClick, TRzDBEdit12, ahk_class TfmChitSale
-		ControlSend, TRzDBEdit12, {Home}☎{Space 2}{Right}, ahk_class TfmChitSale
-		Sleep, 50
-	}
 	ControlSend, , {F5}, ahk_class TfmChitSale
 	Sleep, 500
 	; '재고 확인' 다이얼로그 뜨면 닫힐 때까지 대기 (최대 60초)
@@ -3010,8 +2992,6 @@ return
 		총금액 := 0
 	if (입금액 = "")
 		입금액 := 0
-	if (FillMissingPhoneFromGogaek(fbConn, 전화번호, g_pk))
-		ControlSetText, Edit8, %전화번호%, %WINTITLE%
 
 	; EXECUTE BLOCK + WHEN ANY DO: J_GITA 등 일부 행이 EUC-KR 멀티바이트 중간 잘림으로
 	; KSC_5601 CAST 실패하는 경우 해당 컬럼만 NULL 처리하고 행은 유지 (TMS firebirdScheduler.js 패턴)
@@ -3130,7 +3110,7 @@ return
 	}
 
 	; ===== tms_list UPSERT: 기존 행은 UPDATE(수량 같으면 출 보존, 다르면 NULL), 신규 행은 INSERT =====
-	myQuery := "INSERT INTO tms_list (ID, pk, 출, 내용, 수량, 단가, 공급대가, pdt_code, 비고, no) VALUES`n" . CONT1 . "`nON DUPLICATE KEY UPDATE`n  ID = VALUES(ID),`n  내용 = VALUES(내용),`n  단가 = VALUES(단가),`n  공급대가 = VALUES(공급대가),`n  pdt_code = VALUES(pdt_code),`n  비고 = VALUES(비고),`n  no = VALUES(no),`n  출 = CASE WHEN tms_list.ID != VALUES(ID) OR tms_list.수량 != VALUES(수량) THEN NULL ELSE tms_list.출 END,`n  수량 = VALUES(수량);"
+	myQuery := "INSERT INTO tms_list (ID, pk, 출, 내용, 수량, 단가, 공급대가, pdt_code, 비고, no) VALUES`n" . CONT1 . "`nON DUPLICATE KEY UPDATE`n  내용 = VALUES(내용),`n  단가 = VALUES(단가),`n  공급대가 = VALUES(공급대가),`n  pdt_code = VALUES(pdt_code),`n  비고 = VALUES(비고),`n  no = VALUES(no),`n  출 = CASE WHEN tms_list.수량 != VALUES(수량) THEN NULL ELSE tms_list.출 END,`n  수량 = VALUES(수량);"
 	result := dbQuery(myDB, myQuery)
 	if(errorCheck(result)){
 		MsgBox, % "tms_list UPSERT ErrorCode: " result[2] ", Error : " result[3] "`n`n쿼리>`n" myQuery
@@ -3147,9 +3127,9 @@ return
 	EnvSet, PATH, %A_EnvPath%;%UserProfile%\AppData\Local\Programs\Python\Python313\;%UserProfile%\AppData\Local\Programs\Python\Python313\Scripts\
 	Run, python "%UserProfile%\tms_new\send_custom_fcm.py" %ct_pk%
 
-	run, %A_ScriptDir%\readerspeaker.ahk
+	run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
 
-	SoundPlay, %A_ScriptDir%\F1.mp3
+	SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\F1.mp3
 	Sleep, 100
 
 	verifyTms := dbQuery(myDB, "SELECT COUNT(*) FROM tms WHERE ID = '" . ct_pk . "';")
@@ -4162,8 +4142,6 @@ image_backup := ""
 	catch
 		g_pk := 0
 	rs.Close()
-	if (FillMissingPhoneFromGogaek(fbConn, 전화번호, g_pk))
-		ControlSetText, Edit8, %전화번호%, %WINTITLE%
 
 	sqlEst := ""
 		. "EXECUTE BLOCK RETURNS (E_PK INTEGER, J_PK INTEGER, J_NAME_K VARCHAR(40) CHARACTER SET KSC_5601, J_STANDARD_K VARCHAR(40) CHARACTER SET KSC_5601, E_QTY NUMERIC(18,2), J_GITA_K VARCHAR(20) CHARACTER SET KSC_5601, E_NO INTEGER) AS "
@@ -4284,9 +4262,9 @@ image_backup := ""
 	EnvSet, PATH, %A_EnvPath%;%UserProfile%\AppData\Local\Programs\Python\Python313\;%UserProfile%\AppData\Local\Programs\Python\Python313\Scripts\
 	Run, python "%UserProfile%\tms_new\send_purchase_fcm.py" %et_pk%
 
-	run, %A_ScriptDir%\readerspeaker.ahk
+	run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
 
-	SoundPlay, %A_ScriptDir%\F1.mp3
+	SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\F1.mp3
 	Sleep, 100
 
 	verifyTms := dbQuery(myDB, "SELECT COUNT(*) FROM tms WHERE ID = '" . et_pk . "';")
@@ -4314,14 +4292,6 @@ image_backup := ""
 	}
 
 	; 폼 F5 저장 강제 (Firebird commit 대기)
-	; 전표메모 맨 앞에 ☎ 표시 (이미 있으면 skip — 재실행 중복 방지)
-	ControlGetText, memoCur, TRzDBEdit11, ahk_class TfmChitBuy
-	if (SubStr(memoCur, 1, 1) != "☎")
-	{
-		ControlClick, TRzDBEdit11, ahk_class TfmChitBuy
-		ControlSend, TRzDBEdit11, {Home}☎{Space 2}{Right}, ahk_class TfmChitBuy
-		Sleep, 50
-	}
 	ControlSend, , {F5}, ahk_class TfmChitBuy
 	Sleep, 500
 	IfWinExist, 재고 확인
@@ -4413,22 +4383,6 @@ image_backup := ""
 
 	ct_pk := rs.Fields("CT_PK").Value
 	rs.Close()
-
-	g_pk := 0
-	sqlCt2 := "SELECT G_PK FROM CHITTOP WHERE CT_PK = " . ct_pk
-	try
-	{
-		rsG := fbConn.Execute(sqlCt2)
-		if !rsG.EOF
-			g_pk := rsG.Fields("G_PK").Value
-		rsG.Close()
-	}
-	catch
-	{
-		g_pk := 0
-	}
-	if (FillMissingPhoneFromGogaek(fbConn, 전화번호, g_pk))
-		ControlSetText, Edit8, %전화번호%, %WINTITLE%
 
 	; EXECUTE BLOCK + WHEN ANY DO: J_GITA 등 일부 행이 EUC-KR 멀티바이트 중간 잘림으로
 	; KSC_5601 CAST 실패하는 경우 해당 컬럼만 NULL 처리하고 행은 유지 (TMS firebirdScheduler.js 패턴)
@@ -4551,9 +4505,9 @@ image_backup := ""
 	EnvSet, PATH, %A_EnvPath%;%UserProfile%\AppData\Local\Programs\Python\Python313\;%UserProfile%\AppData\Local\Programs\Python\Python313\Scripts\
 	Run, python "%UserProfile%\tms_new\send_purchase_fcm.py" %ct_pk%
 
-	run, %A_ScriptDir%\readerspeaker.ahk
+	run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\readerspeaker.ahk
 
-	SoundPlay, %A_ScriptDir%\F1.mp3
+	SoundPlay, \\192.168.0.1\hdd1\일정표 최근\일정표220730\sound\F1.mp3
 	Sleep, 100
 
 	verifyTms := dbQuery(myDB, "SELECT COUNT(*) FROM tms WHERE ID = '" . ct_pk . "';")
@@ -4592,49 +4546,6 @@ EnsureMySQLConnection() {
     if (myDB = "error" || myDB = "")
         return false
     dbQuery(myDB, "set character set euckr")
-    return true
-}
-
-; 화면 연락처가 비었을 때 거래처 원장의 대표전화(G_TEL)로 보완, 없으면 휴대전화(G_HP) 사용.
-FillMissingPhoneFromGogaek(fbConn, ByRef phone, gPk) {
-    phone := Trim(phone)
-    if (phone != "" || gPk = "" || gPk = 0)
-        return false
-    if gPk is not number
-        return false
-    gPk := Floor(gPk)
-
-    sqlPhone := "SELECT FIRST 1 G_TEL, G_HP FROM GOGAEK WHERE G_PK = " . gPk
-    try
-        rsPhone := fbConn.Execute(sqlPhone)
-    catch
-        return false
-
-    if rsPhone.EOF
-    {
-        try rsPhone.Close()
-        return false
-    }
-
-    tel := ""
-    hp := ""
-    try tel := rsPhone.Fields("G_TEL").Value
-    catch
-        tel := ""
-    try hp := rsPhone.Fields("G_HP").Value
-    catch
-        hp := ""
-    try rsPhone.Close()
-
-    tel := Trim(tel)
-    hp := Trim(hp)
-    if (tel != "")
-        phone := tel
-    else if (hp != "")
-        phone := hp
-    else
-        return false
-
     return true
 }
 

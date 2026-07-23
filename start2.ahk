@@ -589,12 +589,8 @@ XButton2::
 sch:
 timetable:
 {
-	;~ MsgBox, ㅇㅇ
-	;~ run, %A_Desktop%\일정표20.exe
-	;~ run, \\192.168.0.1\hdd1\일정표 최근\일정표220730\일정표21.ahk
-	;~ run, %A_Desktop%\일정표2025\일정표21.exe
 
-	run, "C:\Program Files\Naver\Naver Whale\Application\whale.exe" "https://shwood.co.kr/sales/sales_listup"
+	run, "C:\Program Files\Naver\Naver Whale\Application\whale.exe" "https://shwood.co.kr/product/product_cart"
 
 }
 return
@@ -1330,10 +1326,8 @@ timer0:
 
 
 
-	If( WinExist("ahk_class TfmChitSale") or WinExist("ahk_class TfmEstimate2") )
+	If( WinExist("ahk_class TfmChitSale") or WinExist("ahk_class TfmEstimate2") or WinExist("ahk_class TfmChitBuy") )
 	{
-
-
 
 
 		IfWinExist, 배송문자 시스템  -by shwood-
